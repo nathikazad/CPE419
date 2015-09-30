@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TILEWIDTH 2
+#define TILEWIDTH 32
 
 const char* output = "result.out";
 
