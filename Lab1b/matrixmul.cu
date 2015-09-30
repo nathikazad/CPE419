@@ -93,7 +93,7 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd, in
    for (k = 0; k < width; k++)
       pVal += Md[row * width + k] * Nd[k * width + col];
 
-   printf("Pd[%d] or Pd[%d,%d] = %f \n", row * width + col, row, col, pVal);
+   //printf("Pd[%d] or Pd[%d,%d] = %f \n", row * width + col, row, col, pVal);
    Pd[row * width + col] = pVal;
 }
 
@@ -115,10 +115,10 @@ void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int width) 
 
 
    MatMulKernel<<<dimGrid, dimBlock>>>(Md, Nd, Pd, width);
-   cudaMemcpy(Pd, p, size, cudaMemcpyDeviceToHost);
-   int i;
-   for(i=0;i<36;i++)
-      printf(" p[%d] = %f\n", i ,p[i]);   
+   cudaMemcpy(p, Pd, size, cudaMemcpyDeviceToHost);
+   //int i;
+   //for(i=0;i<36;i++)
+      //printf(" p[%d] = %f\n", i ,p[i]);   
    
    outputMatrix(p, width);
 
