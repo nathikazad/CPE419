@@ -8,7 +8,7 @@
 
 #include "matrixmul.h"
 
-// Function that allocates memory for the arrays
+// Function that allocates memory for the matrices
 _data_type *allocateMemory(int width) {
    
    _data_type *mat;
@@ -20,7 +20,7 @@ _data_type *allocateMemory(int width) {
    return mat;
 }
 
-// Reads input file into array
+// Reads input file into a matrix
 _data_type *readFile(char *fileName, int *width) {
    
    int i;
@@ -58,7 +58,7 @@ _data_type *readFile(char *fileName, int *width) {
 
    mat = allocateMemory(*width);
 
-   // TODO: load matrix 
+   // loads matrix
    for (i = 0; i < *width * *width; i++) {
       fscanf(inFile, format, &val);
       mat[i] = val;
@@ -82,6 +82,7 @@ void outputMatrix(_data_type *mat, int width) {
    fclose(outFile);
 }
 
+// GPU function: matrix multiplication per thread
 __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd, int width) {
    
    int row = blockIdx.y * TILEWIDTH + threadIdx.y;
@@ -92,36 +93,34 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd, in
 
    for (k = 0; k < width; k++)
       pVal += Md[row * width + k] * Nd[k * width + col];
-
-   //printf("Pd[%d] or Pd[%d,%d] = %f \n", row * width + col, row, col, pVal);
    Pd[row * width + col] = pVal;
 }
 
+// GPU setup function
 void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int width) {
 
-   int size = width * width * sizeof(_data_type);
-   int blocks = width / TILEWIDTH;
+   int size = width * width * sizeof(_data_type);  //TILEWIDTH = 32, in header file
+   int blocks = width / TILEWIDTH;                 //determines number of blocks in one dimension
    _data_type *Md, *Nd, *Pd;
 
+   // Allocates space and moves matrices to GPU
    cudaMalloc(&Md, size);
    cudaMemcpy(Md, m, size, cudaMemcpyHostToDevice);
    cudaMalloc(&Nd, size);
    cudaMemcpy(Nd, n, size, cudaMemcpyHostToDevice);
    cudaMalloc(&Pd, size);
 
-   //Launch Kernel
-   dim3 dimGrid(blocks, blocks);
-   dim3 dimBlock(TILEWIDTH, TILEWIDTH);
+   // Launch Kernel
+   dim3 dimGrid(blocks, blocks);          //grid = blocks x blocks 
+   dim3 dimBlock(TILEWIDTH, TILEWIDTH);   //32 x 32 = 1024 threads per block
 
-
+   // Calls the matrix multiply function and writes data from GPU to host
    MatMulKernel<<<dimGrid, dimBlock>>>(Md, Nd, Pd, width);
    cudaMemcpy(p, Pd, size, cudaMemcpyDeviceToHost);
-   //int i;
-   //for(i=0;i<36;i++)
-      //printf(" p[%d] = %f\n", i ,p[i]);   
    
    outputMatrix(p, width);
 
+   // Frees GPU memory
    cudaFree(Md);
    cudaFree(Nd);
    cudaFree(Pd);
@@ -137,24 +136,28 @@ int main(int argc, char **argv) {
       exit(1);
    }
 
-   //loads the first input matrix
+   // Loads the first input matrix
    m = readFile(argv[1], &widthM);
 
-   //loads the second input matrix
+   // Loads the second input matrix
    n = readFile(argv[2], &widthN);
 
-   // checks to see if the input matrices can be multiplied
+   // Checks to see if the input matrices can be multiplied
    if (widthM != widthN) {
 	   fprintf(stderr, "INVALID MATRICES! ERROR: %d != %d\n", widthM, widthN);
 	   exit(1);
    }
 
    // NOTE FROM NATHIK : check height as well?
+   // NO, SINCE THE MATRICES WERE KNOWN TO BE SQUARE
 
-   //allocates memory for the product matrix
+   // Allocates memory for the product matrix
    p = allocateMemory(widthM);
+   
+   // Calls the GPU prep function
    matrixMulOnDevice(m, n, p, widthM);
 
+   // Frees matrix memory
    free(m);
    free(n);
    free(p);

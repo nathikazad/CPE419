@@ -1,0 +1,26 @@
+Eric Dazet (edazet) and Nathik Salam (nsalam)
+CPE 419
+2 October 2015
+
+Assignment 2 Report
+
+1) Run Data
+
+As requested by the assignment, we conducted three runs for each of the two 
+possible variations, using the system time command and the 1408.in matrix
+for both input matrices. Below are the runtimes for each variation. We decided 
+to use the "real" value given by the time command. 
+
+          |  Run 1    |  Run 2    |  Run 3    |  Average     |
+----------|-----------------------------------|--------------|
+Float     |   3.017s  |   2.994s  |   2.935s  |   2.982s     |
+Double    |   3.052s  |   3.035s  |   3.013s  |   3.033s     |
+
+As expected, the float version was slightly faster than the double version.
+
+
+2) Question: In your kernel implementation, how many threads can be
+simultaneously executing on a GeForce 980 GPU, which contains 16 Streaming
+Multiprocessors. Use nvcc --ptxas-options="-v" <yourfile>.cu to see the
+resource usage of your kernel.
+
