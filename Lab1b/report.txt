@@ -24,3 +24,4 @@ simultaneously executing on a GeForce 980 GPU, which contains 16 Streaming
 Multiprocessors. Use nvcc --ptxas-options="-v" <yourfile>.cu to see the
 resource usage of your kernel.
 
+// ANSWER GOES HERE

@@ -148,9 +148,6 @@ int main(int argc, char **argv) {
 	   exit(1);
    }
 
-   // NOTE FROM NATHIK : check height as well?
-   // NO, SINCE THE MATRICES WERE KNOWN TO BE SQUARE
-
    // Allocates memory for the product matrix
    p = allocateMemory(widthM);
    
