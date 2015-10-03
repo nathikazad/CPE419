@@ -24,4 +24,4 @@ simultaneously executing on a GeForce 980 GPU, which contains 16 Streaming
 Multiprocessors. Use nvcc --ptxas-options="-v" <yourfile>.cu to see the
 resource usage of your kernel.
 
-// ANSWER GOES HERE
+According to the ptxas output, this program consumes 15 registers per thread and each block has 32x32=1024 threads, 1024 threads consume 1024x15=15,360registers which is less than number of registers per block 65536 so that is not a constraining factor. The total amount of shared memory used by the program is 60 bytes, and the amount of constant memory available is 65536 bytes, so that is not a limiting factor either. Therefor the limiting factor on the GeForce 980 GPU on the number of threads for our implementation of the kernel is maximum number of threads per multiprocessor times the number of multiprocessors which is 2048*16=32,768 threads.
