@@ -1,9 +1,9 @@
 /*
  * Author: Eric Dazet (edazet) and Nathik Salam (nsalam)
  * CPE 419
- * 2 October 2015
+ * 9 October 2015
  * 
- * Assignment 2: CUDA Matrix Multiplication
+ * Assignment 3: CUDA Matrix Multiplication with Tiling
  */
 
 #include <stdio.h>

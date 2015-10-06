@@ -19,7 +19,6 @@
 
 #define TILEWIDTH 32
 
-
 const char* output = "result.out";
 
 #ifdef DOUBLE

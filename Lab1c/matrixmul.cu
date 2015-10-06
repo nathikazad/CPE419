@@ -1,9 +1,9 @@
 /*
  * Author: Eric Dazet (edazet) and Nathik Salam (nsalam)
  * CPE 419
- * 2 October 2015
+ * 9 October 2015
  * 
- * Assignment 2: CUDA Matrix Multiplication
+ * Assignment 3: CUDA Matrix Multiplication with Tiling
  */
 
 #include "matrixmul.h"
@@ -81,14 +81,15 @@ void outputMatrix(_data_type *mat, int numRows, int numCols) {
    
    for (i = 0; i < numRows; i++) {
       for (j = 0; j < numCols; j++)
-         fprintf(outFile, printFormat, mat[i * numRows + numCols]);
+         fprintf(outFile, printFormat, mat[i * numRows + j]);
       fprintf(outFile, "\n");
    }
    fclose(outFile);
 }
 
 // GPU function: matrix multiplication per thread
-__global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd, int numRows, numCols) {
+__global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd, 
+   int rowsM, int colsM, int rowsN, int colsN) {
 
    //TODO: Shared memory
    __shared__ _data_type Mds[TILEWIDTH][TILEWIDTH];
@@ -98,12 +99,29 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd, in
    int col = blockIdx.x * TILEWIDTH + threadIdx.x;
    
    float pVal = 0;
-   int k;
-
-   //TODO: Change to handle non-square matrices
-   for (k = 0; k < width; k++)
-      pVal += Md[row * numRows + k] * Nd[k * numCols + col];
-   Pd[row * width + col] = pVal;
+   int k, i;
+   
+   //printf("Grid.y = %d\n", (colsM + TILEWIDTH - 1) / TILEWIDTH);
+   
+   //possible ternary statements for non-matrix tile values
+   for (i = 0; i < (colsM + TILEWIDTH - 1) / TILEWIDTH; i++) {
+      Mds[threadIdx.y][threadIdx.x] = (row > rowsM || 
+         (TILEWIDTH * i) + threadIdx.x > colsM) ? 0 : Md[row * colsM + 
+         (i * TILEWIDTH + threadIdx.x)];
+      Nds[threadIdx.y][threadIdx.x] = (col > colsN || 
+         (TILEWIDTH * i) + threadIdx.y > rowsN) ? 0: Nd[col + 
+         (i * TILEWIDTH + threadIdx.y) * colsN];
+         
+      __syncthreads();
+      
+      for (k = 0; k < TILEWIDTH; k++)
+         pVal += Mds[threadIdx.y][k] * Nds[k][threadIdx.x];
+        
+      __syncthreads();
+   }
+   //TODO
+   if (row < rowsM && col < colsN)
+      Pd[row *  + col] = pVal;
 }
 
 // GPU setup function
@@ -120,14 +138,18 @@ void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int rowsM, 
    cudaMemcpy(Md, m, sizeM, cudaMemcpyHostToDevice);
    cudaMalloc(&Nd, sizeN);
    cudaMemcpy(Nd, n, sizeN, cudaMemcpyHostToDevice);
-   cudaMalloc(&Pd, sizeP);
+   cudaMalloc(&Pd, sizeP); 
 
    // Launch Kernel
-   dim3 dimGrid(//TODO, TODO);          //grid = blocks x blocks 
    dim3 dimBlock(TILEWIDTH, TILEWIDTH);   //32 x 32 = 1024 threads per block
+   dim3 dimGrid((rowsM + dimBlock.x - 1) / dimBlock.x, 
+      (colsN + dimBlock.y - 1) / dimBlock.y);          //grid = blocks x blocks 
+   
+   fprintf(stderr, "Grid.x = %d\n", (rowsM + dimBlock.x - 1) / dimBlock.x);
+   fprintf(stderr, "Grid.y = %d\n", (colsN + dimBlock.y - 1) / dimBlock.y);
 
    // Calls the matrix multiply function and writes data from GPU to host
-   MatMulKernel<<<dimGrid, dimBlock>>>(Md, Nd, Pd, rowsM, colsN);
+   MatMulKernel<<<dimGrid, dimBlock>>>(Md, Nd, Pd, rowsM, colsM, rowsN, colsN);
    cudaMemcpy(p, Pd, sizeP, cudaMemcpyDeviceToHost);
    
    outputMatrix(p, rowsM, colsN);
@@ -150,9 +172,11 @@ int main(int argc, char **argv) {
 
    // Loads the first input matrix
    m = readFile(argv[1], &rowsM, &colsM);
+   fprintf(stderr, "M: rows, cols = %d, %d\n", rowsM, colsM);
 
    // Loads the second input matrix
    n = readFile(argv[2], &rowsN, &colsN);
+   fprintf(stderr, "N: rows, cols = %d, %d\n", rowsN, colsN);
 
    // Checks to see if the input matrices can be multiplied
    if (colsM != rowsN) {

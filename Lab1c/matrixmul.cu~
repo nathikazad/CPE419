@@ -81,7 +81,7 @@ void outputMatrix(_data_type *mat, int numRows, int numCols) {
    
    for (i = 0; i < numRows; i++) {
       for (j = 0; j < numCols; j++)
-         fprintf(outFile, printFormat, mat[i * width + j]);
+         fprintf(outFile, printFormat, mat[i * numRows + numCols]);
       fprintf(outFile, "\n");
    }
    fclose(outFile);
@@ -100,6 +100,7 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd, in
    float pVal = 0;
    int k;
 
+   //TODO: Change to handle non-square matrices
    for (k = 0; k < width; k++)
       pVal += Md[row * numRows + k] * Nd[k * numCols + col];
    Pd[row * width + col] = pVal;
