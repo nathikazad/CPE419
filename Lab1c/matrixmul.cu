@@ -111,6 +111,9 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd,
       Nds[threadIdx.y][threadIdx.x] = (col > colsN || 
          (TILEWIDTH * i) + threadIdx.y > rowsN) ? 0: Nd[col + 
          (i * TILEWIDTH + threadIdx.y) * colsN];
+
+      //Mds[threadIdx.y][threadIdx.x] = Md[row * colsM + (i * TILEWIDTH + threadIdx.x)];
+      //Nds[threadIdx.y][threadIdx.x] = Nd[col + (i * TILEWIDTH + threadIdx.y) * colsN];
          
       __syncthreads();
       
@@ -121,7 +124,7 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd,
    }
    //TODO
    if (row < rowsM && col < colsN)
-      Pd[row *  + col] = pVal;
+      Pd[row * rowsM + col] = pVal;
 }
 
 // GPU setup function
