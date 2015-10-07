@@ -91,7 +91,6 @@ void outputMatrix(_data_type *mat, int numRows, int numCols) {
 __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd, 
    int rowsM, int colsM, int rowsN, int colsN, int iter) {
 
-   //TODO: Shared memory
    __shared__ _data_type Mds[TILEWIDTH][TILEWIDTH];
    __shared__ _data_type Nds[TILEWIDTH][TILEWIDTH];
    
@@ -153,7 +152,7 @@ void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int rowsM, 
    fprintf(stderr, "Grid.x = %d\n", (rowsM + dimBlock.x - 1) / dimBlock.x);
    fprintf(stderr, "Grid.y = %d\n", (colsN + dimBlock.y - 1) / dimBlock.y);
 
-   int iter = rowsM < colsN ? colsN : rowsM;
+   int iter = rowsM > colsN ? rowsM : colsN;
 
    // Calls the matrix multiply function and writes data from GPU to host
    MatMulKernel<<<dimGrid, dimBlock>>>(Md, Nd, Pd, rowsM, colsM, rowsN, colsN, iter);
@@ -175,7 +174,7 @@ void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int rowsM, 
 
 int main(int argc, char **argv) {
 
-   _data_type *m = NULL, *n = NULL, *p;
+   _data_type *m = NULL, *n = NULL, *p = NULL;
    int rowsM = 0, rowsN = 0, colsM = 0, colsN = 0;;
 
    if (argc != 3) {
