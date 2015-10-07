@@ -89,7 +89,7 @@ void outputMatrix(_data_type *mat, int numRows, int numCols) {
 
 // GPU function: matrix multiplication per thread
 __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd, 
-   int rowsM, int colsM, int rowsN, int colsN) {
+   int rowsM, int colsM, int rowsN, int colsN, int iter) {
 
    //TODO: Shared memory
    __shared__ _data_type Mds[TILEWIDTH][TILEWIDTH];
@@ -101,17 +101,18 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd,
    float pVal = 0;
    int k, i;
    
-   //printf("Grid.y = %d\n", (colsM + TILEWIDTH - 1) / TILEWIDTH);
-   
    //possible ternary statements for non-matrix tile values
-   for (i = 0; i < (colsM + TILEWIDTH - 1) / TILEWIDTH; i++) {
-      Mds[threadIdx.y][threadIdx.x] = (row > rowsM || 
-         (TILEWIDTH * i) + threadIdx.x > colsM) ? 0 : Md[row * colsM + 
-         (i * TILEWIDTH + threadIdx.x)];
-      Nds[threadIdx.y][threadIdx.x] = (col > colsN || 
-         (TILEWIDTH * i) + threadIdx.y > rowsN) ? 0: Nd[col + 
-         (i * TILEWIDTH + threadIdx.y) * colsN];
+   for (i = 0; i < iter / TILEWIDTH; i++) {
 
+      printf("t.x = %d, t.y = %d, i = %d, b.x = %d, b.y = %d, row = %d, col = %d\n", threadIdx.x, threadIdx.y, i, blockIdx.x, blockIdx.y, row, col);
+      Mds[threadIdx.y][threadIdx.x] = ((row >= rowsM) || 
+         (TILEWIDTH * i + threadIdx.x >= colsM)) ? 0 : Md[row * colsM + 
+         (i * TILEWIDTH + threadIdx.x)];
+      printf("b[%d][%d], Mds[%d][%d] = %f\n", blockIdx.x, blockIdx.y, threadIdx.y, threadIdx.x, Mds[threadIdx.y][threadIdx.x]);
+      Nds[threadIdx.y][threadIdx.x] = ((col >= colsN) || 
+         ((TILEWIDTH * i) + threadIdx.y >= rowsN)) ? 0: Nd[col + 
+         (i * TILEWIDTH + threadIdx.y) * colsN];
+      printf("b[%d][%d], Nds[%d][%d] = %f\n", blockIdx.x, blockIdx.y,threadIdx.y, threadIdx.x, Nds[threadIdx.y][threadIdx.x]);
       //Mds[threadIdx.y][threadIdx.x] = Md[row * colsM + (i * TILEWIDTH + threadIdx.x)];
       //Nds[threadIdx.y][threadIdx.x] = Nd[col + (i * TILEWIDTH + threadIdx.y) * colsN];
          
@@ -122,9 +123,10 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd,
         
       __syncthreads();
    }
-   //TODO
-   if (row < rowsM && col < colsN)
+   if (row < rowsM && col < colsN) {
+      printf("b[%d][%d], t[%d][%d], r: %d, c: %d = %f\n", blockIdx.x, blockIdx.y, threadIdx.y, threadIdx.x, row, col, pVal);
       Pd[row * rowsM + col] = pVal;
+   }
 }
 
 // GPU setup function
@@ -151,9 +153,17 @@ void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int rowsM, 
    fprintf(stderr, "Grid.x = %d\n", (rowsM + dimBlock.x - 1) / dimBlock.x);
    fprintf(stderr, "Grid.y = %d\n", (colsN + dimBlock.y - 1) / dimBlock.y);
 
+   int iter = rowsM < colsN ? colsN : rowsM;
+
    // Calls the matrix multiply function and writes data from GPU to host
-   MatMulKernel<<<dimGrid, dimBlock>>>(Md, Nd, Pd, rowsM, colsM, rowsN, colsN);
+   MatMulKernel<<<dimGrid, dimBlock>>>(Md, Nd, Pd, rowsM, colsM, rowsN, colsN, iter);
    cudaMemcpy(p, Pd, sizeP, cudaMemcpyDeviceToHost);
+
+   for (sizeP = 0; sizeP < rowsM; sizeP++) {
+      for (sizeM = 0; sizeM < colsN; sizeM++)
+         printf("%f ", p[sizeP * rowsM + sizeM]);
+      printf("\n");
+   }
    
    outputMatrix(p, rowsM, colsN);
 
