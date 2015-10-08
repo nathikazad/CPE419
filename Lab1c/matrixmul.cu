@@ -101,17 +101,17 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd,
    int k, i;
    
    //possible ternary statements for non-matrix tile values
-   for (i = 0; i < iter / TILEWIDTH; i++) {
+   for (i = 0; i < (iter + TILEWIDTH - 1) / TILEWIDTH; i++) {
 
-      printf("t.x = %d, t.y = %d, i = %d, b.x = %d, b.y = %d, row = %d, col = %d\n", threadIdx.x, threadIdx.y, i, blockIdx.x, blockIdx.y, row, col);
+      //printf("t.x = %d, t.y = %d, i = %d, b.x = %d, b.y = %d, row = %d, col = %d\n", threadIdx.x, threadIdx.y, i, blockIdx.x, blockIdx.y, row, col);
       Mds[threadIdx.y][threadIdx.x] = ((row >= rowsM) || 
          (TILEWIDTH * i + threadIdx.x >= colsM)) ? 0 : Md[row * colsM + 
          (i * TILEWIDTH + threadIdx.x)];
-      printf("b[%d][%d], Mds[%d][%d] = %f\n", blockIdx.x, blockIdx.y, threadIdx.y, threadIdx.x, Mds[threadIdx.y][threadIdx.x]);
+      //printf("b[%d][%d], Mds[%d][%d] = %f\n", blockIdx.x, blockIdx.y, threadIdx.y, threadIdx.x, Mds[threadIdx.y][threadIdx.x]);
       Nds[threadIdx.y][threadIdx.x] = ((col >= colsN) || 
          ((TILEWIDTH * i) + threadIdx.y >= rowsN)) ? 0: Nd[col + 
          (i * TILEWIDTH + threadIdx.y) * colsN];
-      printf("b[%d][%d], Nds[%d][%d] = %f\n", blockIdx.x, blockIdx.y,threadIdx.y, threadIdx.x, Nds[threadIdx.y][threadIdx.x]);
+      //printf("b[%d][%d], Nds[%d][%d] = %f\n", blockIdx.x, blockIdx.y,threadIdx.y, threadIdx.x, Nds[threadIdx.y][threadIdx.x]);
       //Mds[threadIdx.y][threadIdx.x] = Md[row * colsM + (i * TILEWIDTH + threadIdx.x)];
       //Nds[threadIdx.y][threadIdx.x] = Nd[col + (i * TILEWIDTH + threadIdx.y) * colsN];
          
@@ -123,8 +123,8 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd,
       __syncthreads();
    }
    if (row < rowsM && col < colsN) {
-      printf("b[%d][%d], t[%d][%d], r: %d, c: %d = %f\n", blockIdx.x, blockIdx.y, threadIdx.y, threadIdx.x, row, col, pVal);
-      Pd[row * rowsM + col] = pVal;
+      Pd[row * colsN + col] = pVal;
+      printf("Pd[%d] = %f\n", row * colsN + col, pVal);
    }
 }
 
@@ -133,16 +133,28 @@ void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int rowsM, 
    int rowsN, int colsN) {
 
    int sizeM = rowsM * colsM * sizeof(_data_type);  //TILEWIDTH = 32, in header file
+   printf("sizeM = %d\n", sizeM);
    int sizeN = rowsN * colsN * sizeof(_data_type);
+   printf("sizeN = %d\n", sizeN);
    int sizeP = rowsM * colsN * sizeof(_data_type);
+   printf("sizeP = %d\n", sizeP);
    _data_type *Md, *Nd, *Pd;
 
    // Allocates space and moves matrices to GPU
-   cudaMalloc(&Md, sizeM);
+   if (cudaMalloc(&Md, sizeM) == cudaErrorMemoryAllocation) { 
+	printf("CUDA MALLOC ERROR: Md\n");
+	exit(1);
+   }
    cudaMemcpy(Md, m, sizeM, cudaMemcpyHostToDevice);
-   cudaMalloc(&Nd, sizeN);
+   if (cudaMalloc(&Nd, sizeN) == cudaErrorMemoryAllocation) { 
+	printf("CUDA MALLOC ERROR: Md\n");
+	exit(1);
+   }
    cudaMemcpy(Nd, n, sizeN, cudaMemcpyHostToDevice);
-   cudaMalloc(&Pd, sizeP); 
+   if (cudaMalloc(&Pd, sizeP) == cudaErrorMemoryAllocation) { 
+	printf("CUDA MALLOC ERROR: Md\n");
+	exit(1);
+   }
 
    // Launch Kernel
    dim3 dimBlock(TILEWIDTH, TILEWIDTH);   //32 x 32 = 1024 threads per block
@@ -160,7 +172,7 @@ void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int rowsM, 
 
    for (sizeP = 0; sizeP < rowsM; sizeP++) {
       for (sizeM = 0; sizeM < colsN; sizeM++)
-         printf("%f ", p[sizeP * rowsM + sizeM]);
+         printf("p[%d] = %f ", sizeP * colsN + sizeM, p[sizeP * colsN + sizeM]);
       printf("\n");
    }
    
