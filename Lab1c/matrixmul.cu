@@ -101,7 +101,7 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd,
    int k, i;
    
    //possible ternary statements for non-matrix tile values
-   for (i = 0; i < (iter + TILEWIDTH - 1) / TILEWIDTH; i++) {
+   for (i = 0; i < (rowsM + TILEWIDTH - 1) / TILEWIDTH; i++) {
 
       //printf("t.x = %d, t.y = %d, i = %d, b.x = %d, b.y = %d, row = %d, col = %d\n", threadIdx.x, threadIdx.y, i, blockIdx.x, blockIdx.y, row, col);
       Mds[threadIdx.y][threadIdx.x] = ((row >= rowsM) || 
