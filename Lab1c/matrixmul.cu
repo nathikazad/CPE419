@@ -103,11 +103,11 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd,
    for (i = 0; i < (colsM + TILEWIDTH - 1) / TILEWIDTH; i++) {
 
       Mds[threadIdx.y][threadIdx.x] = ((row < rowsM) && 
-         (TILEWIDTH * i + threadIdx.x < colsM)) ? 0 : Md[row * colsM + 
-         (i * TILEWIDTH + threadIdx.x)];
+         (TILEWIDTH * i + threadIdx.x < colsM)) ? Md[row * colsM + 
+         (i * TILEWIDTH + threadIdx.x)] : 0;
       Nds[threadIdx.y][threadIdx.x] = ((col < colsN) && 
-         (TILEWIDTH * i + threadIdx.y < rowsN)) ? 0 : Nd[col + 
-         (i * TILEWIDTH + threadIdx.y) * colsN];
+         (TILEWIDTH * i + threadIdx.y < rowsN)) ? Nd[col + 
+         (i * TILEWIDTH + threadIdx.y) * colsN] : 0;
          
       __syncthreads();
       
