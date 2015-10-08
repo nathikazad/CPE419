@@ -100,20 +100,14 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd,
    float pVal = 0;
    int k, i;
    
-   //possible ternary statements for non-matrix tile values
-   for (i = 0; i < (colsN + TILEWIDTH - 1) / TILEWIDTH; i++) {
+   for (i = 0; i < (colsM + TILEWIDTH - 1) / TILEWIDTH; i++) {
 
-      //printf("t.x = %d, t.y = %d, i = %d, b.x = %d, b.y = %d, row = %d, col = %d\n", threadIdx.x, threadIdx.y, i, blockIdx.x, blockIdx.y, row, col);
       Mds[threadIdx.y][threadIdx.x] = ((row >= rowsM) || 
          (TILEWIDTH * i + threadIdx.x >= colsM)) ? 0 : Md[row * colsM + 
          (i * TILEWIDTH + threadIdx.x)];
-      //printf("b[%d][%d], Mds[%d][%d] = %f\n", blockIdx.x, blockIdx.y, threadIdx.y, threadIdx.x, Mds[threadIdx.y][threadIdx.x]);
       Nds[threadIdx.y][threadIdx.x] = ((col >= colsN) || 
-         ((TILEWIDTH * i) + threadIdx.y >= rowsN)) ? 0: Nd[col + 
+         (TILEWIDTH * i + threadIdx.y >= rowsN)) ? 0 : Nd[col + 
          (i * TILEWIDTH + threadIdx.y) * colsN];
-      //printf("b[%d][%d], Nds[%d][%d] = %f\n", blockIdx.x, blockIdx.y,threadIdx.y, threadIdx.x, Nds[threadIdx.y][threadIdx.x]);
-      //Mds[threadIdx.y][threadIdx.x] = Md[row * colsM + (i * TILEWIDTH + threadIdx.x)];
-      //Nds[threadIdx.y][threadIdx.x] = Nd[col + (i * TILEWIDTH + threadIdx.y) * colsN];
          
       __syncthreads();
       
@@ -170,14 +164,15 @@ void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int rowsM, 
    MatMulKernel<<<dimGrid, dimBlock>>>(Md, Nd, Pd, rowsM, colsM, rowsN, colsN, iter);
    cudaMemcpy(p, Pd, sizeP, cudaMemcpyDeviceToHost);
 
-   /*for (sizeP = 0; sizeP < rowsM; sizeP++) {
-      for (sizeM = 0; sizeM < colsN; sizeM++)
-         printf("p[%d] = %f ", sizeP * colsN + sizeM, p[sizeP * colsN + sizeM]);
-      printf("\n");
-   }*/
-   
-   outputMatrix(p, rowsM, colsN);
+   /*FILE *outfile = fopen("testoutfile.out", "w+");
 
+   for (sizeP = 0; sizeP < rowsM; sizeP++) {
+      for (sizeM = 0; sizeM < colsN; sizeM++)
+         fprintf(outfile, printFormat, p[sizeP * colsN + sizeM]);
+      fprintf(outfile,"\n");
+   }
+   fclose(outfile);*/
+   
    // Frees GPU memory
    cudaFree(Md);
    cudaFree(Nd);
@@ -213,6 +208,7 @@ int main(int argc, char **argv) {
    
    // Calls the GPU prep function
    matrixMulOnDevice(m, n, p, rowsM, colsM, rowsN, colsN);
+   outputMatrix(p, rowsM, colsN);
 
    // Frees matrix memory
    free(m);
