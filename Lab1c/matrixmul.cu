@@ -89,7 +89,7 @@ void outputMatrix(_data_type *mat, int numRows, int numCols) {
 
 // GPU function: matrix multiplication per thread
 __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd, 
-   int rowsM, int colsM, int rowsN, int colsN, int iter) {
+   int rowsM, int colsM, int rowsN, int colsN) {
 
    __shared__ _data_type Mds[TILEWIDTH][TILEWIDTH];
    __shared__ _data_type Nds[TILEWIDTH][TILEWIDTH];
@@ -102,11 +102,11 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd,
    
    for (i = 0; i < (colsM + TILEWIDTH - 1) / TILEWIDTH; i++) {
 
-      Mds[threadIdx.y][threadIdx.x] = ((row >= rowsM) || 
-         (TILEWIDTH * i + threadIdx.x >= colsM)) ? 0 : Md[row * colsM + 
+      Mds[threadIdx.y][threadIdx.x] = ((row < rowsM) && 
+         (TILEWIDTH * i + threadIdx.x < colsM)) ? 0 : Md[row * colsM + 
          (i * TILEWIDTH + threadIdx.x)];
-      Nds[threadIdx.y][threadIdx.x] = ((col >= colsN) || 
-         (TILEWIDTH * i + threadIdx.y >= rowsN)) ? 0 : Nd[col + 
+      Nds[threadIdx.y][threadIdx.x] = ((col < colsN) && 
+         (TILEWIDTH * i + threadIdx.y < rowsN)) ? 0 : Nd[col + 
          (i * TILEWIDTH + threadIdx.y) * colsN];
          
       __syncthreads();
@@ -121,22 +121,14 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd,
       //printf("bx: %d, by: %d, tx: %d, ty: %d, Pd[%d] = %f\n", blockIdx.x, blockIdx.y, threadIdx.x, threadIdx.y, row * colsN + col, pVal);
       Pd[row * colsN + col] = pVal;
    }
-   else {
-      //printf("else bx: %d, by: %d, tx: %d, ty: %d, Pd[%d] = %f\n", blockIdx.x, blockIdx.y, threadIdx.x, threadIdx.y, row * colsN + col, pVal);
-   }
-	
 }
 
 // GPU setup function
-void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int rowsM, int colsM, 
-   int rowsN, int colsN) {
+void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int rowsM, int colsM, int rowsN, int colsN) {
 
    int sizeM = rowsM * colsM * sizeof(_data_type);  //TILEWIDTH = 32, in header file
-   printf("sizeM = %d\n", sizeM);
    int sizeN = rowsN * colsN * sizeof(_data_type);
-   printf("sizeN = %d\n", sizeN);
    int sizeP = rowsM * colsN * sizeof(_data_type);
-   printf("sizeP = %d\n", sizeP);
    _data_type *Md, *Nd, *Pd;
 
    // Allocates space and moves matrices to GPU
@@ -160,13 +152,11 @@ void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int rowsM, 
    dim3 dimGrid((colsN + dimBlock.x - 1) / dimBlock.x, 
       (rowsM + dimBlock.y - 1) / dimBlock.y);          //grid = blocks x blocks 
    
-   fprintf(stderr, "Grid.x = %d\n", (rowsM + dimBlock.x - 1) / dimBlock.x);
-   fprintf(stderr, "Grid.y = %d\n", (colsN + dimBlock.y - 1) / dimBlock.y);
-
-   int iter = rowsM > colsN ? rowsM : colsN;
+   //fprintf(stderr, "Grid.x = %d\n", (colsN + dimBlock.x - 1) / dimBlock.x);
+   //fprintf(stderr, "Grid.y = %d\n", (rowsM + dimBlock.y - 1) / dimBlock.y);
 
    // Calls the matrix multiply function and writes data from GPU to host
-   MatMulKernel<<<dimGrid, dimBlock>>>(Md, Nd, Pd, rowsM, colsM, rowsN, colsN, iter);
+   MatMulKernel<<<dimGrid, dimBlock>>>(Md, Nd, Pd, rowsM, colsM, rowsN, colsN);
    cudaMemcpy(p, Pd, sizeP, cudaMemcpyDeviceToHost);
 
    /*for (sizeP = 0; sizeP < rowsM; sizeP++) {
@@ -174,6 +164,8 @@ void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int rowsM, 
          printf("p[%d] = %f ",sizeP * colsN + sizeM, p[sizeP * colsN + sizeM]);
       printf("\n");
    }*/
+
+   outputMatrix(p, rowsM, colsN);
    
    // Frees GPU memory
    cudaFree(Md);
@@ -184,7 +176,7 @@ void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int rowsM, 
 int main(int argc, char **argv) {
 
    _data_type *m = NULL, *n = NULL, *p = NULL;
-   int rowsM = 0, rowsN = 0, colsM = 0, colsN = 0;;
+   int rowsM = 0, rowsN = 0, colsM = 0, colsN = 0;
 
    if (argc != 3) {
       fprintf(stderr, "PLEASE SPECIFY FILES! ERROR: %s\n", strerror(errno));
@@ -193,11 +185,11 @@ int main(int argc, char **argv) {
 
    // Loads the first input matrix
    m = readFile(argv[1], &rowsM, &colsM);
-   fprintf(stderr, "M: rows, cols = %d, %d\n", rowsM, colsM);
+   //fprintf(stderr, "M: rows, cols = %d, %d\n", rowsM, colsM);
 
    // Loads the second input matrix
    n = readFile(argv[2], &rowsN, &colsN);
-   fprintf(stderr, "N: rows, cols = %d, %d\n", rowsN, colsN);
+   //fprintf(stderr, "N: rows, cols = %d, %d\n", rowsN, colsN);
 
    // Checks to see if the input matrices can be multiplied
    if (colsM != rowsN) {
@@ -210,7 +202,6 @@ int main(int argc, char **argv) {
    
    // Calls the GPU prep function
    matrixMulOnDevice(m, n, p, rowsM, colsM, rowsN, colsN);
-   outputMatrix(p, rowsM, colsN);
 
    // Frees matrix memory
    free(m);
