@@ -17,7 +17,7 @@
 #include <string.h>
 #include <cuda_runtime.h>
 
-#define TILEWIDTH 3
+#define TILEWIDTH 32
 
 const char* output = "result.out";
 

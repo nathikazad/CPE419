@@ -81,7 +81,7 @@ void outputMatrix(_data_type *mat, int numRows, int numCols) {
    
    for (i = 0; i < numRows; i++) {
       for (j = 0; j < numCols; j++)
-         fprintf(outFile, printFormat, mat[i * numRows + j]);
+         fprintf(outFile, printFormat, mat[i * numCols + j]);
       fprintf(outFile, "\n");
    }
    fclose(outFile);
@@ -124,7 +124,7 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd,
    }
    if (row < rowsM && col < colsN) {
       Pd[row * colsN + col] = pVal;
-      printf("Pd[%d] = %f\n", row * colsN + col, pVal);
+      //printf("Pd[%d] = %f\n", row * colsN + col, pVal);
    }
 }
 
@@ -170,11 +170,11 @@ void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int rowsM, 
    MatMulKernel<<<dimGrid, dimBlock>>>(Md, Nd, Pd, rowsM, colsM, rowsN, colsN, iter);
    cudaMemcpy(p, Pd, sizeP, cudaMemcpyDeviceToHost);
 
-   for (sizeP = 0; sizeP < rowsM; sizeP++) {
+   /*for (sizeP = 0; sizeP < rowsM; sizeP++) {
       for (sizeM = 0; sizeM < colsN; sizeM++)
          printf("p[%d] = %f ", sizeP * colsN + sizeM, p[sizeP * colsN + sizeM]);
       printf("\n");
-   }
+   }*/
    
    outputMatrix(p, rowsM, colsN);
 
