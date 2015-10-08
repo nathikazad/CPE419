@@ -111,15 +111,20 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd,
          
       __syncthreads();
       
-      for (k = 0; k < TILEWIDTH; k++)
+      for (k = 0; k < TILEWIDTH; k++) {
          pVal += Mds[threadIdx.y][k] * Nds[k][threadIdx.x];
-        
+      } 
       __syncthreads();
    }
+
    if (row < rowsM && col < colsN) {
+      //printf("bx: %d, by: %d, tx: %d, ty: %d, Pd[%d] = %f\n", blockIdx.x, blockIdx.y, threadIdx.x, threadIdx.y, row * colsN + col, pVal);
       Pd[row * colsN + col] = pVal;
-      //printf("Pd[%d] = %f\n", row * colsN + col, pVal);
    }
+   else {
+      //printf("else bx: %d, by: %d, tx: %d, ty: %d, Pd[%d] = %f\n", blockIdx.x, blockIdx.y, threadIdx.x, threadIdx.y, row * colsN + col, pVal);
+   }
+	
 }
 
 // GPU setup function
@@ -152,8 +157,8 @@ void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int rowsM, 
 
    // Launch Kernel
    dim3 dimBlock(TILEWIDTH, TILEWIDTH);   //32 x 32 = 1024 threads per block
-   dim3 dimGrid((rowsM + dimBlock.x - 1) / dimBlock.x, 
-      (colsN + dimBlock.y - 1) / dimBlock.y);          //grid = blocks x blocks 
+   dim3 dimGrid((colsN + dimBlock.x - 1) / dimBlock.x, 
+      (rowsM + dimBlock.y - 1) / dimBlock.y);          //grid = blocks x blocks 
    
    fprintf(stderr, "Grid.x = %d\n", (rowsM + dimBlock.x - 1) / dimBlock.x);
    fprintf(stderr, "Grid.y = %d\n", (colsN + dimBlock.y - 1) / dimBlock.y);
@@ -164,14 +169,11 @@ void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int rowsM, 
    MatMulKernel<<<dimGrid, dimBlock>>>(Md, Nd, Pd, rowsM, colsM, rowsN, colsN, iter);
    cudaMemcpy(p, Pd, sizeP, cudaMemcpyDeviceToHost);
 
-   /*FILE *outfile = fopen("testoutfile.out", "w+");
-
-   for (sizeP = 0; sizeP < rowsM; sizeP++) {
+   /*for (sizeP = 0; sizeP < rowsM; sizeP++) {
       for (sizeM = 0; sizeM < colsN; sizeM++)
-         fprintf(outfile, printFormat, p[sizeP * colsN + sizeM]);
-      fprintf(outfile,"\n");
-   }
-   fclose(outfile);*/
+         printf("p[%d] = %f ",sizeP * colsN + sizeM, p[sizeP * colsN + sizeM]);
+      printf("\n");
+   }*/
    
    // Frees GPU memory
    cudaFree(Md);
