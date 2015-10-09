@@ -7,8 +7,8 @@
  */
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
-#include <helper_functions.h>
-#include <helper_cuda.h>
+//#include <helper_functions.h>
+//#include <helper_cuda.h>
 #include "matrixmul.h"
 
 // Function that allocates memory for the matrices
@@ -91,7 +91,7 @@ void outputMatrix(_data_type *mat, int numRows, int numCols) {
 }
 
 // GPU function: matrix multiplication per thread
-__global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd, 
+/*__global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd, 
    int rowsM, int colsM, int rowsN, int colsN) {
 
    __shared__ _data_type Mds[TILEWIDTH][TILEWIDTH];
@@ -124,7 +124,7 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd,
       //printf("bx: %d, by: %d, tx: %d, ty: %d, Pd[%d] = %f\n", blockIdx.x, blockIdx.y, threadIdx.x, threadIdx.y, row * colsN + col, pVal);
       Pd[row * colsN + col] = pVal;
    }
-}
+}*/
 
 // GPU setup function
 void matrixMulOnDevice (_data_type *A, _data_type *B, _data_type *C, int m, int k, int rowsN, int n) {

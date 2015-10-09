@@ -97,7 +97,7 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd,
    int row = blockIdx.y * TILEWIDTH + threadIdx.y;
    int col = blockIdx.x * TILEWIDTH + threadIdx.x;
    
-   float pVal = 0;
+   _data_type pVal = 0;
    int k, i;
    
    for (i = 0; i < (colsM + TILEWIDTH - 1) / TILEWIDTH; i++) {
