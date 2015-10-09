@@ -111,9 +111,9 @@ __global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd,
          
       __syncthreads();
       
-      for (k = 0; k < TILEWIDTH; k++) {
-         pVal += Mds[threadIdx.y][k] * Nds[k][threadIdx.x];
-      } 
+      for (k = 0; k < TILEWIDTH; k++)
+         pVal += Mds[threadIdx.y][k] * Nds[k][threadIdx.x]; 
+
       __syncthreads();
    }
 
