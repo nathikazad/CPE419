@@ -11,5 +11,5 @@ mm_cublas: $(SRCFILES)
 	nvcc $(NVFLAGS) -o mm_cublas $^ 
 
 clean: 
-	rm -f *.o mm_cuda
+	rm -f *.o mm_cublas
 
