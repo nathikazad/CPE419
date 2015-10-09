@@ -135,6 +135,8 @@ void matrixMulOnDevice (_data_type *A, _data_type *B, _data_type *C, int m, int 
    const float *alpha = &alf;
    const float *beta = &bet;
 
+   //there are getMatrix and setMatrix functions available
+
    cublasHandle_t handle;
    cublasCreate(&handle);
    cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
