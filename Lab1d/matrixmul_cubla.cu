@@ -126,6 +126,26 @@ void outputMatrix(_data_type *mat, int numRows, int numCols) {
    }
 }*/
 
+void gpu_blas_mmul(const float *A, const float *B, float *C, const int m, const int k, const int n) {
+   int lda=m,ldb=k,ldc=m;
+   const float alf = 1;
+   const float bet = 0;
+   const float *alpha = &alf;
+   const float *beta = &bet;
+
+   // Create a handle for CUBLAS
+   cublasHandle_t handle;
+   cublasCreate(&handle);
+
+   // Do the actual multiplication
+   cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_t, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+
+   // Destroy the handle
+   cublasDestroy(handle);
+}
+
+
+
 // GPU setup function
 void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int rowsM, int colsM, int rowsN, int colsN) {
 
@@ -151,22 +171,8 @@ void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int rowsM, 
    exit(1);
    }
 
-   // Launch Kernel
-   dim3 dimBlock(TILEWIDTH, TILEWIDTH);   //32 x 32 = 1024 threads per block
-   dim3 dimGrid((colsN + dimBlock.x - 1) / dimBlock.x, 
-      (rowsM + dimBlock.y - 1) / dimBlock.y);          //grid = blocks x blocks 
-   
 
-   int lda=rowsM,ldb=colsM,ldc=rowsM;
-   const float alf = 1;
-   const float bet = 0;
-   const float *alpha = &alf;
-   const float *beta = &bet;
-   
-   cublasHandle_t handle;
-   cublasCreate(&handle);
-   cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_T, rowsM, colsN, colsM, alpha, Md, lda, Nd, ldb, beta, Pd, ldc);
-   cublasDestroy(handle);
+    gpu_blas_mmul(Md, Nd, Pd, rowsM, colsM, colsN);
    
    cudaMemcpy(p, Pd, sizeP, cudaMemcpyDeviceToHost);
 
