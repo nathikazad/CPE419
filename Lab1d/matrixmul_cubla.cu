@@ -90,41 +90,6 @@ void outputMatrix(_data_type *mat, int numRows, int numCols) {
    fclose(outFile);
 }
 
-// GPU function: matrix multiplication per thread
-/*__global__ void MatMulKernel (_data_type *Md, _data_type *Nd, _data_type *Pd, 
-   int rowsM, int colsM, int rowsN, int colsN) {
-
-   __shared__ _data_type Mds[TILEWIDTH][TILEWIDTH];
-   __shared__ _data_type Nds[TILEWIDTH][TILEWIDTH];
-   
-   int row = blockIdx.y * TILEWIDTH + threadIdx.y;
-   int col = blockIdx.x * TILEWIDTH + threadIdx.x;
-   
-   float pVal = 0;
-   int k, i;
-   
-   for (i = 0; i < (colsM + TILEWIDTH - 1) / TILEWIDTH; i++) {
-
-      Mds[threadIdx.y][threadIdx.x] = ((row < rowsM) && 
-         (TILEWIDTH * i + threadIdx.x < colsM)) ? Md[row * colsM + 
-         (i * TILEWIDTH + threadIdx.x)] : 0;
-      Nds[threadIdx.y][threadIdx.x] = ((col < colsN) && 
-         (TILEWIDTH * i + threadIdx.y < rowsN)) ? Nd[col + 
-         (i * TILEWIDTH + threadIdx.y) * colsN] : 0;
-         
-      __syncthreads();
-      
-      for (k = 0; k < TILEWIDTH; k++) {
-         pVal += Mds[threadIdx.y][k] * Nds[k][threadIdx.x];
-      } 
-      __syncthreads();
-   }
-
-   if (row < rowsM && col < colsN) {
-      //printf("bx: %d, by: %d, tx: %d, ty: %d, Pd[%d] = %f\n", blockIdx.x, blockIdx.y, threadIdx.x, threadIdx.y, row * colsN + col, pVal);
-      Pd[row * colsN + col] = pVal;
-   }
-}*/
 
 void gpu_blas_mmul(const float *A, const float *B, float *C, const int m, const int k, const int n) {
    int lda=m,ldb=k,ldc=m;
