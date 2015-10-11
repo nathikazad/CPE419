@@ -1,0 +1,12 @@
+Time taken for 1408 x 1408 
+Double Precision
+Trial 1 2.879s
+Trial 2 2.860s
+Trial 3 2.865s
+Avg     2.868s
+
+Single Precision
+Trial 1 2.863s
+Trial 2 2.861s
+Trial 3 2.869s
+Avg     2.864s

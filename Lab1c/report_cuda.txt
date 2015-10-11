@@ -1,0 +1,22 @@
+Time taken for 1408 x 1408 
+Double Precision
+Trial 1 2.687s
+Trial 2 2.675s
+Trial 3 2.673s
+Avg     2.678s
+
+Single Precision
+Trial 1 2.674s
+Trial 2 2.652s
+Trial 3 2.668s
+Avg     2.664s
+
+CGMA is the ratio between Global memory access and floating point operations
+
+2 Global accesses transferring memory from global to shared
+2*32(TILEWDITH) floating operations, one multiplication and one addition
+Therefore CGMA 64/2=32
+
+In part B, there were two global acesses and two floating operations, therefore the CGMA was 2
+
+Part C has a significantly improved CGMA, 32 times better.

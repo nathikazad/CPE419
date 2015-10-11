@@ -84,29 +84,10 @@ void outputMatrix(_data_type *mat, int numRows, int numCols) {
    
    for (i = 0; i < numRows; i++) {
       for (j = 0; j < numCols; j++)
-         fprintf(outFile, printFormat, mat[i * numCols + j]);
+         fprintf(outFile, printFormat, mat[i + numCols * j]);
       fprintf(outFile, "\n");
    }
    fclose(outFile);
-}
-
-
-void gpu_blas_mmul(const float *A, const float *B, float *C, const int m, const int k, const int n) {
-   int lda=m,ldb=k,ldc=m;
-   const float alf = 1;
-   const float bet = 0;
-   const float *alpha = &alf;
-   const float *beta = &bet;
-
-   // Create a handle for CUBLAS
-   cublasHandle_t handle;
-   cublasCreate(&handle);
-
-   // Do the actual multiplication
-   cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_t, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
-
-   // Destroy the handle
-   cublasDestroy(handle);
 }
 
 
@@ -135,28 +116,35 @@ void matrixMulOnDevice (_data_type *m, _data_type *n, _data_type *p, int rowsM, 
    printf("CUDA MALLOC ERROR: Md\n");
    exit(1);
    }
-
-
-    gpu_blas_mmul(Md, Nd, Pd, rowsM, colsM, colsN);
+   cublasHandle_t handle;
+   cublasCreate(&handle);
+   const float alf = 1;
+   const float bet = 0;
+   const float *alpha = &alf;
+   const float *beta = &bet;
+   cublasSgemm(handle, CUBLAS_OP_T, CUBLAS_OP_T, rowsM, colsN, colsM, alpha, Md, rowsM, Nd, colsN, beta, Pd, colsM);
+   cublasDestroy(handle);
    
    cudaMemcpy(p, Pd, sizeP, cudaMemcpyDeviceToHost);
 
-   /*for (sizeP = 0; sizeP < rowsM; sizeP++) {
-      for (sizeM = 0; sizeM < colsN; sizeM++)
-         printf("p[%d] = %f ",sizeP * colsN + sizeM, p[sizeP * colsN + sizeM]);
+   for (sizeP = 0; sizeP < rowsM; sizeP++) {
+      for (sizeM = 0; sizeM < colsM; sizeM++)
+         printf("m[%d] = %f ",sizeP * colsN + sizeM, m[sizeP * colsN + sizeM]);
       printf("\n");
-   }*/
+   }
+
+   for (sizeP = 0; sizeP < rowsM; sizeP++) {
+      for (sizeM = 0; sizeM < colsN; sizeM++)
+         printf("p[%d] = %f ",sizeP * colsN + sizeM, p[sizeP + colsN * sizeM]);
+      printf("\n");
+   }
 
    outputMatrix(p, rowsM, colsN);
    
    // Frees GPU memory
    cudaFree(Md);
    cudaFree(Nd);
-   cudaFree(Pd);
-
-
- 
-   
+   cudaFree(Pd);   
 }
 
 int main(int argc, char **argv) {
