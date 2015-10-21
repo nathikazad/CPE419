@@ -83,8 +83,8 @@ void outputVector(float *mat, int length) {
 
 int main(int argc, char **argv) {
 
-   _data_type *m = NULL, *n = NULL, *p;
-   int widthM = 0, widthN = 0;
+   float *a = NULL, *b = NULL, *c;
+   int lengthA = 0, lengthB = 0;
 
    if (argc != 3) {
       fprintf(stderr, "PLEASE SPECIFY FILES! ERROR: %s\n", strerror(errno));
@@ -92,27 +92,27 @@ int main(int argc, char **argv) {
    }
 
    // Loads the first input vector
-   m = readFile(argv[1], &widthM);
+   m = readFile(argv[1], &lengthA);
 
    // Loads the second input vector
-   n = readFile(argv[2], &widthN);
+   n = readFile(argv[2], &lengthB);
 
-   // Checks to see if the input matrices can be multiplied
-   if (widthM != widthN) {
-	   fprintf(stderr, "INVALID MATRICES! ERROR: %d != %d\n", widthM, widthN);
+   // Checks to see if the input vectors can be added together
+   if (lengthA != lengthB) {
+	   fprintf(stderr, "INVALID MATRICES! ERROR: %d != %d\n", lengthA, lengthB);
 	   exit(1);
    }
 
-   // Allocates memory for the product matrix
-   p = allocateMemory(widthM);
+   // Allocates memory for the product vector
+   c = allocateMemory(lengthA);
    
-   // Calls the GPU prep function
-   matrixMulOnDevice(m, n, p, widthM);
+   // TODO:Calls the vector addition function
+   // TODO:Calls the histogram function 
 
-   // Frees matrix memory
-   free(m);
-   free(n);
-   free(p);
+   // Frees vector memory
+   free(a);
+   free(b);
+   free(c);
 
    return 0;
 }
