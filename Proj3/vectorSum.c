@@ -68,8 +68,19 @@ _data_type *readFile(char *fileName, int *length) {
    return vec;
 }
 
+float *vectorSummation(float *a, float *b, int length) {
+
+   float *c = allocateMemory(length);
+   int i = 0;
+
+   for (int i = 0; i < length; i++)
+      c[i] = a[i] + b[i];
+
+   return c;
+}
+
 // writes the product vector to an output file
-void outputVector(float *mat, int length) {
+void outputVector(float *vec, int length) {
 
    FILE *outFile = fopen(output, "w+");
    int i, j;
@@ -104,9 +115,9 @@ int main(int argc, char **argv) {
    }
 
    // Allocates memory for the product vector
-   c = allocateMemory(lengthA);
+   c = vectorSummation(a, b, lengthA);
+   outputVector(c, length);
    
-   // TODO:Calls the vector addition function
    // TODO:Calls the histogram function 
 
    // Frees vector memory
