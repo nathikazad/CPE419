@@ -1,0 +1,60 @@
+Intel(R) Advisor can now assist with vectorization and show optimization
+  report messages with your source code.
+See "https://software.intel.com/en-us/intel-advisor-xe" for details.
+
+
+Begin optimization report for: main(int, char **)
+
+    Report from: Vector optimizations [vec]
+
+
+LOOP BEGIN at vectorSum.c(50,4) inlined into vectorSum.c(111,8)
+   remark #15520: loop was not vectorized: loop with multiple exits cannot be vectorized unless it meets search loop idiom criteria
+LOOP END
+
+LOOP BEGIN at vectorSum.c(63,4) inlined into vectorSum.c(111,8)
+   remark #15382: vectorization support: call to function fscanf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorSum.c(64,7) ]
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization
+   remark #15346: vector dependence: assumed OUTPUT dependence between val line 64 and vec line 65
+   remark #15346: vector dependence: assumed OUTPUT dependence between vec line 65 and val line 64
+LOOP END
+
+LOOP BEGIN at vectorSum.c(50,4) inlined into vectorSum.c(114,8)
+   remark #15520: loop was not vectorized: loop with multiple exits cannot be vectorized unless it meets search loop idiom criteria
+LOOP END
+
+LOOP BEGIN at vectorSum.c(63,4) inlined into vectorSum.c(114,8)
+   remark #15382: vectorization support: call to function fscanf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorSum.c(64,7) ]
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization
+   remark #15346: vector dependence: assumed OUTPUT dependence between val line 64 and vec line 65
+   remark #15346: vector dependence: assumed OUTPUT dependence between vec line 65 and val line 64
+LOOP END
+
+LOOP BEGIN at vectorSum.c(94,4) inlined into vectorSum.c(124,4)
+   remark #15527: loop was not vectorized: function call to fprintf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorSum.c(95,7) ]
+LOOP END
+===========================================================================
+
+Begin optimization report for: readFile(char *, int *)
+
+    Report from: Vector optimizations [vec]
+
+
+LOOP BEGIN at vectorSum.c(50,4)
+   remark #15520: loop was not vectorized: loop with multiple exits cannot be vectorized unless it meets search loop idiom criteria
+LOOP END
+
+LOOP BEGIN at vectorSum.c(63,4)
+   remark #15523: loop was not vectorized: loop control variable i was found, but loop iteration count cannot be computed before executing the loop
+LOOP END
+===========================================================================
+
+Begin optimization report for: outputVector(float *, int)
+
+    Report from: Vector optimizations [vec]
+
+
+LOOP BEGIN at vectorSum.c(94,4)
+   remark #15527: loop was not vectorized: function call to fprintf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorSum.c(95,7) ]
+LOOP END
+===========================================================================

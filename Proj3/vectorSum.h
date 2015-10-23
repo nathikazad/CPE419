@@ -15,6 +15,15 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <omp.h>
+#include <mkl.h>
+#include <i_malloc.h>
 
 const char* output = "result.out";
+
+#ifdef _MIC_
+#define VEC_ALIGN 64
+#else
+#define VEC_ALIGN 32
+#endif
 

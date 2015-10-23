@@ -13,15 +13,16 @@ float *allocateMemory(int length) {
    
    float *vec;
 
-   if ((vec = (float *)malloc(length * sizeof(float))) == NULL) {
-	   fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
-	   exit(1);
+   //if ((vec = (float *)_mm_malloc(length * sizeof(float), VEC_ALIGN)) == NULL) {
+   if ((vec = (float *)mkl_malloc(length * sizeof(float), VEC_ALIGN)) == NULL) {
+      fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
+      exit(1);
    }
    return vec;
 }
 
 // Reads input file into a vector
-_data_type *readFile(char *fileName, int *length) {
+float *readFile(char *fileName, int *length) {
    
    int i;
    struct stat st;
@@ -60,7 +61,7 @@ _data_type *readFile(char *fileName, int *length) {
 
    // loads vector
    for (i = 0; i < *length; i++) {
-      fscanf(inFile, format, &val);
+      fscanf(inFile, "%f", &val);
       vec[i] = val;
    }
 
@@ -70,12 +71,17 @@ _data_type *readFile(char *fileName, int *length) {
 
 float *vectorSummation(float *a, float *b, int length) {
 
-   float *c = allocateMemory(length);
+   float *restrict c = allocateMemory(length);
    int i = 0;
+   int numThreads = omp_get_num_threads();
 
-   for (int i = 0; i < length; i++)
-      c[i] = a[i] + b[i];
-
+   #pragma omp parallel shared (a, b, c, length)
+   {
+  // #pragma omp parallel for simd private (i) schedule(dynamic, 300000)
+   //for (i = 0; i < length; i++)
+     // c[i] = a[i] + b[i];
+      vsAdd(length, a, b, c);
+   }
    return c;
 }
 
@@ -85,16 +91,15 @@ void outputVector(float *vec, int length) {
    FILE *outFile = fopen(output, "w+");
    int i, j;
    
-   for (i = 0; i < length; i++) {
-         fprintf(outFile, printFormat, vec[i]);
-      fprintf(outFile, "\n");
-   }
+   for (i = 0; i < length; i++)
+      fprintf(outFile, "%.2f ", vec[i]);
+   fprintf(outFile, "\n");
    fclose(outFile);
 }
 
 int main(int argc, char **argv) {
 
-   float *a = NULL, *b = NULL, *c;
+   float *restrict a = NULL, *restrict b = NULL, * c;
    int lengthA = 0, lengthB = 0;
 
    if (argc != 3) {
@@ -103,10 +108,10 @@ int main(int argc, char **argv) {
    }
 
    // Loads the first input vector
-   m = readFile(argv[1], &lengthA);
+   a = readFile(argv[1], &lengthA);
 
    // Loads the second input vector
-   n = readFile(argv[2], &lengthB);
+   b = readFile(argv[2], &lengthB);
 
    // Checks to see if the input vectors can be added together
    if (lengthA != lengthB) {
@@ -116,14 +121,14 @@ int main(int argc, char **argv) {
 
    // Allocates memory for the product vector
    c = vectorSummation(a, b, lengthA);
-   outputVector(c, length);
+   outputVector(c, lengthA);
    
    // TODO:Calls the histogram function 
 
    // Frees vector memory
-   free(a);
-   free(b);
-   free(c);
+   mkl_free(a);
+   mkl_free(b);
+   mkl_free(c);
 
    return 0;
 }

@@ -7,14 +7,18 @@
 #
 
 GCC = icc
-CFLAGS = -O3 -mmic -vec -openmp -g -debug inline-debug-info
+CFLAGS = -O3 -openmp -g -restrict -std=c99 -debug inline-debug-info
+CFLAGS += -qopt-report=5 -qopt-report-phase=vec -mkl
 
 make: vectorSum.o
-	$(GCC) $(CFLAGS) -o mm vectorSum.o
+	$(GCC) $(CFLAGS) -o vSum vectorSum.o
+
+mic: CFLAGS += -mmic
+mic: make
 
 vectorSum.o: vectorSum.c
 	$(GCC) $(CFLAGS) -c vectorSum.c
 	
 clean:
-	rm vectorSum.o 
+	rm vectorSum.o vSum 
 	
