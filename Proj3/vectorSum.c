@@ -96,6 +96,17 @@ float *vectorSummation(float *a, float *b, int length) {
    return c;
 }
 
+void vectorHistogration(float *vector, int vector_length, int *histogram, int hist_length, float start, float end)
+{
+   int i, index;
+   for(i=0;i<vector_length;i++)
+   {
+      index=(int)((vector[i]+end)*2);
+      if(index==hist_length)
+         index--;
+      histogram[index]=histogram[index]+1;
+   }
+}
 // writes the product vector to an output file
 void outputVector(float *vec, int length) {
 
@@ -108,9 +119,20 @@ void outputVector(float *vec, int length) {
    fclose(outFile);
 }
 
+void outputHistogram(const char* filename, int *hist, int length) {
+
+   FILE *outFile = fopen(filename, "w+");
+   int i, j;
+   for (i = 0; i < length; i++)
+      fprintf(outFile, "%d, %d\n", i, hist[i]);
+
+   fclose(outFile);
+}
+
 int main(int argc, char **argv) {
 
    float *restrict a = NULL, *restrict b = NULL, * c;
+   int a_histogram[40], b_histogram[40], c_histogram[80];
    int lengthA = 0, lengthB = 0;
 
    if (argc != 3) {
@@ -140,13 +162,31 @@ int main(int argc, char **argv) {
    c = vectorSummation(a, b, lengthA);
    gettimeofday(&tvEnd, NULL);
    timeval_subtract(&tvDiff, &tvEnd, &tvBegin);
-   printf("%ld.%06ld\n", tvDiff.tv_sec, tvDiff.tv_usec);
+   printf("Phi Time: %ld.%06ld\n", tvDiff.tv_sec, tvDiff.tv_usec);
 
    fprintf(stderr, "Writing output\n");
    outputVector(c, lengthA);
    
-   // TODO:Calls the histogram function 
+   int i;
+   for(i=0;i<80;i++)
+   {
+      if(i<40)
+      {
+         a_histogram[i]=0;
+         b_histogram[i]=0;
+         c_histogram[i]=0;
+      }
+      else
+         c_histogram[i]=0;
+   }
 
+   vectorHistogration(a, lengthA, a_histogram, 40, -10.0, 10.0);
+   vectorHistogration(b, lengthB, b_histogram, 40, -10.0, 10.0);
+   vectorHistogration(c, lengthB, c_histogram, 80, -20.0, 20.0);
+ 
+   outputHistogram(a_histogram_filename,a_histogram, 40);
+   outputHistogram(b_histogram_filename,b_histogram, 40);
+   outputHistogram(c_histogram_filename,c_histogram, 80);
    // Frees vector memory
    mkl_free(a);
    mkl_free(b);
