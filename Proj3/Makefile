@@ -13,7 +13,7 @@ CFLAGS += -qopt-report=5 -qopt-report-phase=vec -mkl
 make: vectorSum.o
 	$(GCC) $(CFLAGS) -o vSum vectorSum.o
 
-mic: CFLAGS += -mmic
+mic: CFLAGS += -mmic -offload-build
 mic: make
 
 vectorSum.o: vectorSum.c

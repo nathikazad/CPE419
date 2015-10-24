@@ -7,6 +7,17 @@
  */
 
 #include "vectorSum.h"
+#include <math.h>
+#include <sys/time.h>
+
+int timeval_subtract(struct timeval *result, struct timeval *t2, struct timeval *t1)
+{
+    long int diff = (t2->tv_usec + 1000000 * t2->tv_sec) - (t1->tv_usec + 1000000 * t1->tv_sec);
+    result->tv_sec = diff / 1000000;
+    result->tv_usec = diff % 1000000;
+
+    return (diff<0);
+}
 
 // Function that allocates memory for the vectors
 float *allocateMemory(int length) {
@@ -75,13 +86,13 @@ float *vectorSummation(float *a, float *b, int length) {
    int i = 0;
    int numThreads = omp_get_num_threads();
 
-   #pragma omp parallel shared (a, b, c, length)
+   #pragma offload target(mic:0) in (i) in(a:length(length)) in(b:length(length)) out(c:length(length))
    {
-  // #pragma omp parallel for simd private (i) schedule(dynamic, 300000)
-   //for (i = 0; i < length; i++)
-     // c[i] = a[i] + b[i];
-      vsAdd(length, a, b, c);
+      #pragma omp parallel for simd private(i) shared(a, b, c)
+      for (i = 0; i < length; i++)
+         c[i] = a[i] + b[i];
    }
+
    return c;
 }
 
@@ -93,7 +104,7 @@ void outputVector(float *vec, int length) {
    
    for (i = 0; i < length; i++)
       fprintf(outFile, "%.2f ", vec[i]);
-   fprintf(outFile, "\n");
+   //fprintf(outFile, "\n");
    fclose(outFile);
 }
 
@@ -113,6 +124,8 @@ int main(int argc, char **argv) {
    // Loads the second input vector
    b = readFile(argv[2], &lengthB);
 
+   fprintf(stderr, "%d == %d\n", lengthA, lengthB);
+
    // Checks to see if the input vectors can be added together
    if (lengthA != lengthB) {
 	   fprintf(stderr, "INVALID MATRICES! ERROR: %d != %d\n", lengthA, lengthB);
@@ -120,7 +133,16 @@ int main(int argc, char **argv) {
    }
 
    // Allocates memory for the product vector
+   fprintf(stderr, "Done reading files\n");
+   struct timeval tvBegin, tvEnd, tvDiff;
+   gettimeofday(&tvBegin, NULL);
+
    c = vectorSummation(a, b, lengthA);
+   gettimeofday(&tvEnd, NULL);
+   timeval_subtract(&tvDiff, &tvEnd, &tvBegin);
+   printf("%ld.%06ld\n", tvDiff.tv_sec, tvDiff.tv_usec);
+
+   fprintf(stderr, "Writing output\n");
    outputVector(c, lengthA);
    
    // TODO:Calls the histogram function 
