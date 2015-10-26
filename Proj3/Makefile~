@@ -12,7 +12,7 @@ CFLAGS += -qopt-report=5 -qopt-report-phase=vec -mkl
 
 make: vectorSum.o mean_example.o
 	$(GCC) $(CFLAGS) -o vectorsum vectorSum.o
-	$(GCC) $(CFLAGS) -mmic -offload-build -o vectoranalyze mean_example.o
+	$(GCC) $(CFLAGS) -o vectoranalyze mean_example.o
 
 mic: CFLAGS += -mmic -offload-build
 mic: make
