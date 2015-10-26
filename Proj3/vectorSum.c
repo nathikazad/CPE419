@@ -25,7 +25,7 @@ float *allocateMemory(int length) {
    float *vec;
 
    //if ((vec = (float *)_mm_malloc(length * sizeof(float), VEC_ALIGN)) == NULL) {
-   if ((vec = (float *)mkl_malloc(length * sizeof(float), VEC_ALIGN)) == NULL) {
+   if ((vec = (float *)_mm_malloc(length * sizeof(float), VEC_ALIGN)) == NULL) {
       fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
       exit(1);
    }
@@ -84,11 +84,10 @@ float *vectorSummation(float *a, float *b, int length) {
 
    float *restrict c = allocateMemory(length);
    int i = 0;
-   int numThreads = omp_get_num_threads();
 
    #pragma offload target(mic:0) in (i) in(a:length(length)) in(b:length(length)) out(c:length(length))
    {
-      #pragma omp parallel for simd private(i) shared(a, b, c)
+      #pragma omp parallel for private(i) shared(a, b, c)
       for (i = 0; i < length; i++)
          c[i] = a[i] + b[i];
    }
@@ -96,7 +95,7 @@ float *vectorSummation(float *a, float *b, int length) {
    return c;
 }
 
-void vectorHistogration(float *vector, int vector_length, int *histogram, int hist_length, float start, float end)
+void vectorHistogration(float * restrict vector, int vector_length, int * restrict histogram, int hist_length, float start, float end)
 {
    int i, index;
    for(i=0;i<vector_length;i++)
@@ -104,7 +103,7 @@ void vectorHistogration(float *vector, int vector_length, int *histogram, int hi
       index=(int)((vector[i]+end)*2);
       if(index==hist_length)
          index--;
-      histogram[index]=histogram[index]+1;
+      histogram[index] = histogram[index] + 1;
    }
 }
 // writes the product vector to an output file
@@ -168,9 +167,9 @@ int main(int argc, char **argv) {
    outputVector(c, lengthA);
    
    int i;
-   for(i=0;i<80;i++)
+   for(i = 0; i < 80;i++)
    {
-      if(i<40)
+      if(i < 40)
       {
          a_histogram[i]=0;
          b_histogram[i]=0;
@@ -184,13 +183,13 @@ int main(int argc, char **argv) {
    vectorHistogration(b, lengthB, b_histogram, 40, -10.0, 10.0);
    vectorHistogration(c, lengthB, c_histogram, 80, -20.0, 20.0);
  
-   outputHistogram(a_histogram_filename,a_histogram, 40);
+   /*outputHistogram(a_histogram_filename,a_histogram, 40);
    outputHistogram(b_histogram_filename,b_histogram, 40);
-   outputHistogram(c_histogram_filename,c_histogram, 80);
+   outputHistogram(c_histogram_filename,c_histogram, 80);*/
    // Frees vector memory
-   mkl_free(a);
-   mkl_free(b);
-   mkl_free(c);
+   _mm_free(a);
+   _mm_free(b);
+   _mm_free(c);
 
    return 0;
 }
