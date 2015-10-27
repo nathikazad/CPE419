@@ -7,17 +7,6 @@
  */
 
 #include "vectorSum.h"
-#include <math.h>
-#include <sys/time.h>
-
-int timeval_subtract(struct timeval *result, struct timeval *t2, struct timeval *t1)
-{
-    long int diff = (t2->tv_usec + 1000000 * t2->tv_sec) - (t1->tv_usec + 1000000 * t1->tv_sec);
-    result->tv_sec = diff / 1000000;
-    result->tv_usec = diff % 1000000;
-
-    return (diff<0);
-}
 
 // Function that allocates memory for the vectors
 float *allocateMemory(int length) {
@@ -86,7 +75,7 @@ float *vectorSummation(float * restrict a, float * restrict b, int length) {
 
    #pragma offload target(mic:0) in (i) in(a:length(length)) in(b:length(length)) out(c:length(length))
    {
-      #pragma omp parallel for private(i) shared(a, b, c)
+      #pragma omp parallel for private(i) shared(a, b, c, length)
       for (i = 0; i < length; i++)
          c[i] = a[i] + b[i];
    }
@@ -94,22 +83,51 @@ float *vectorSummation(float * restrict a, float * restrict b, int length) {
    return c;
 }
 
-void vectorHistogration(float * restrict vector, int vector_length, int * restrict histogram, int hist_length, float start, float end)
-{
-   int i, index;
-   for(i=0;i<vector_length;i++)
-   {
-      index=(int)((vector[i]+end)*2);
-      if(index==hist_length)
-         index--;
-      histogram[index] = histogram[index] + 1;
+void vectorHistogration(float * restrict vector, int vector_length, int * restrict histogram, 
+   int hist_length, float start, float end) {
+   
+   int* restrict temp;
+   int threadCount = omp_get_max_threads();
+   int size = threadCount * hist_length * sizeof(int);
+
+   if ((temp = (int *)_mm_malloc(size, VEC_ALIGN)) == NULL) {
+      fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
+      exit(1);
    }
+
+   memset(temp, 0, size);
+
+   #pragma offload target(mic:0) in (threadCount, vector_length, hist_length, end) in(vector:length(vector_length)) \
+      in(temp:length(size)) out(histogram:length(hist_length)) 
+   {
+      int i, index;
+      
+      #pragma omp parallel private (i, index) shared (vector, histogram, temp, vector_length, hist_length, end, threadCount)
+      {
+         int threadId = omp_get_thread_num();
+	 #pragma omp for  
+	 for (i = 0; i < vector_length; i++) {
+	    index = (int)((vector[i] + end) * (hist_length / (2 * end)));
+	    if (index == hist_length)
+	       index--;
+	    temp[hist_length * threadId + index] += 1;
+	 }
+
+      }
+	
+	 //#pragma omp for
+	 for (i = 0; i < hist_length; i++) {
+	    for (index = 0; index < threadCount; index++)
+               histogram[i] += temp[hist_length * index + i];
+	}
+   }
+   _mm_free(temp);
 }
 // writes the product vector to an output file
 void outputVector(float *vec, int length) {
 
    FILE *outFile = fopen(output, "w+");
-   int i, j;
+   int i;
 
    for (i = 0; i < length; i++)
       fprintf(outFile, "%.2f ", vec[i]);
@@ -119,17 +137,17 @@ void outputVector(float *vec, int length) {
 void outputHistogram(const char* filename, int *hist, int length) {
 
    FILE *outFile = fopen(filename, "w+");
-   int i, j;
+   int i;
+
    for (i = 0; i < length; i++)
       fprintf(outFile, "%d, %d\n", i, hist[i]);
-
    fclose(outFile);
 }
 
 int main(int argc, char **argv) {
 
    float *restrict a = NULL, *restrict b = NULL, * c;
-   int a_histogram[40] = {0}, b_histogram[40] = {0}, c_histogram[80] = {0};
+   int * restrict a_histogram, * restrict b_histogram, * restrict c_histogram;
    int lengthA = 0, lengthB = 0;
 
    if (argc != 3) {
@@ -137,13 +155,13 @@ int main(int argc, char **argv) {
       exit(1);
    }
 
+   omp_set_num_threads(224);
+
    // Loads the first input vector
    a = readFile(argv[1], &lengthA);
 
    // Loads the second input vector
    b = readFile(argv[2], &lengthB);
-
-   fprintf(stderr, "%d == %d\n", lengthA, lengthB);
 
    // Checks to see if the input vectors can be added together
    if (lengthA != lengthB) {
@@ -151,45 +169,30 @@ int main(int argc, char **argv) {
       exit(1);
    }
 
-   // Allocates memory for the product vector
-   fprintf(stderr, "Done reading files\n");
-   struct timeval tvBegin, tvEnd, tvDiff;
-   gettimeofday(&tvBegin, NULL);
-
    c = vectorSummation(a, b, lengthA);
-   gettimeofday(&tvEnd, NULL);
-   timeval_subtract(&tvDiff, &tvEnd, &tvBegin);
-   printf("Phi Time: %ld.%06ld\n", tvDiff.tv_sec, tvDiff.tv_usec);
 
-   fprintf(stderr, "Writing output\n");
    outputVector(c, lengthA);
-  
-   // DID ARRAY INIT IN DECLARATION, BELOW LOOP NO LONGER NEEDED
+
+   if ((a_histogram = (int *)_mm_malloc(40 * sizeof(int), VEC_ALIGN)) == NULL) {
+      fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
+      exit(1);
+   }
+   if ((b_histogram = (int *)_mm_malloc(40 * sizeof(int), VEC_ALIGN)) == NULL) {
+      fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
+      exit(1);
+   }
+   if ((c_histogram = (int *)_mm_malloc(40 * sizeof(int), VEC_ALIGN)) == NULL) {
+      fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
+      exit(1);
+   }
  
-   /*int i;
-   for(i = 0; i < 80;i++)
-   {
-      if(i < 40)
-      {
-         a_histogram[i]=0;
-         b_histogram[i]=0;
-         c_histogram[i]=0;
-      }
-      else
-         c_histogram[i]=0;
-   }*/
-
-   // HISTOGRAM GENERATION IS FINE, 100-MILLION ELEMENT INPUT FILES ARE INCORRECT
-   // PIAZZA SAID THE HISTOGRAM FOR THE RESULT VECTOR WILL HAVE ALSO HAVE 40 BINS BUT 
-   // LARGER RANGES, MIGHT NEED TO ALTER FUNCTION
-
    vectorHistogration(a, lengthA, a_histogram, 40, -10.0, 10.0);
    vectorHistogration(b, lengthB, b_histogram, 40, -10.0, 10.0);
-   vectorHistogration(c, lengthB, c_histogram, 80, -20.0, 20.0);
+   vectorHistogration(c, lengthB, c_histogram, 40, -20.0, 20.0);
  
-   outputHistogram(a_histogram_filename,a_histogram, 40);
-   outputHistogram(b_histogram_filename,b_histogram, 40);
-   outputHistogram(c_histogram_filename,c_histogram, 80);
+   outputHistogram(a_histogram_filename, a_histogram, 40);
+   outputHistogram(b_histogram_filename, b_histogram, 40);
+   outputHistogram(c_histogram_filename, c_histogram, 40);
    
    // Frees vector memory
    _mm_free(a);
