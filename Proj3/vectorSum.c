@@ -24,8 +24,7 @@ float *allocateMemory(int length) {
    
    float *vec;
 
-   //if ((vec = (float *)_mm_malloc(length * sizeof(float), VEC_ALIGN)) == NULL) {
-   if ((vec = (float *)mkl_malloc(length * sizeof(float), VEC_ALIGN)) == NULL) {
+   if ((vec = (float *)_mm_malloc(length * sizeof(float), VEC_ALIGN)) == NULL) {
       fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
       exit(1);
    }
@@ -80,15 +79,14 @@ float *readFile(char *fileName, int *length) {
    return vec;
 }
 
-float *vectorSummation(float *a, float *b, int length) {
+float *vectorSummation(float * restrict a, float * restrict b, int length) {
 
    float *restrict c = allocateMemory(length);
-   int i = 0;
-   int numThreads = omp_get_num_threads();
+   int i;
 
    #pragma offload target(mic:0) in (i) in(a:length(length)) in(b:length(length)) out(c:length(length))
    {
-      #pragma omp parallel for simd private(i) shared(a, b, c)
+      #pragma omp parallel for private(i) shared(a, b, c)
       for (i = 0; i < length; i++)
          c[i] = a[i] + b[i];
    }
@@ -96,7 +94,7 @@ float *vectorSummation(float *a, float *b, int length) {
    return c;
 }
 
-void vectorHistogration(float *vector, int vector_length, int *histogram, int hist_length, float start, float end)
+void vectorHistogration(float * restrict vector, int vector_length, int * restrict histogram, int hist_length, float start, float end)
 {
    int i, index;
    for(i=0;i<vector_length;i++)
@@ -104,7 +102,7 @@ void vectorHistogration(float *vector, int vector_length, int *histogram, int hi
       index=(int)((vector[i]+end)*2);
       if(index==hist_length)
          index--;
-      histogram[index]=histogram[index]+1;
+      histogram[index] = histogram[index] + 1;
    }
 }
 // writes the product vector to an output file
@@ -112,10 +110,9 @@ void outputVector(float *vec, int length) {
 
    FILE *outFile = fopen(output, "w+");
    int i, j;
-   
+
    for (i = 0; i < length; i++)
       fprintf(outFile, "%.2f ", vec[i]);
-   //fprintf(outFile, "\n");
    fclose(outFile);
 }
 
@@ -132,7 +129,7 @@ void outputHistogram(const char* filename, int *hist, int length) {
 int main(int argc, char **argv) {
 
    float *restrict a = NULL, *restrict b = NULL, * c;
-   int a_histogram[40], b_histogram[40], c_histogram[80];
+   int a_histogram[40] = {0}, b_histogram[40] = {0}, c_histogram[80] = {0};
    int lengthA = 0, lengthB = 0;
 
    if (argc != 3) {
@@ -150,8 +147,8 @@ int main(int argc, char **argv) {
 
    // Checks to see if the input vectors can be added together
    if (lengthA != lengthB) {
-	   fprintf(stderr, "INVALID MATRICES! ERROR: %d != %d\n", lengthA, lengthB);
-	   exit(1);
+      fprintf(stderr, "INVALID VECTORS! ERROR: %d != %d\n", lengthA, lengthB);
+      exit(1);
    }
 
    // Allocates memory for the product vector
@@ -166,11 +163,13 @@ int main(int argc, char **argv) {
 
    fprintf(stderr, "Writing output\n");
    outputVector(c, lengthA);
-   
-   int i;
-   for(i=0;i<80;i++)
+  
+   // DID ARRAY INIT IN DECLARATION, BELOW LOOP NO LONGER NEEDED
+ 
+   /*int i;
+   for(i = 0; i < 80;i++)
    {
-      if(i<40)
+      if(i < 40)
       {
          a_histogram[i]=0;
          b_histogram[i]=0;
@@ -178,7 +177,11 @@ int main(int argc, char **argv) {
       }
       else
          c_histogram[i]=0;
-   }
+   }*/
+
+   // HISTOGRAM GENERATION IS FINE, 100-MILLION ELEMENT INPUT FILES ARE INCORRECT
+   // PIAZZA SAID THE HISTOGRAM FOR THE RESULT VECTOR WILL HAVE ALSO HAVE 40 BINS BUT 
+   // LARGER RANGES, MIGHT NEED TO ALTER FUNCTION
 
    vectorHistogration(a, lengthA, a_histogram, 40, -10.0, 10.0);
    vectorHistogration(b, lengthB, b_histogram, 40, -10.0, 10.0);
@@ -187,10 +190,11 @@ int main(int argc, char **argv) {
    outputHistogram(a_histogram_filename,a_histogram, 40);
    outputHistogram(b_histogram_filename,b_histogram, 40);
    outputHistogram(c_histogram_filename,c_histogram, 80);
+   
    // Frees vector memory
-   mkl_free(a);
-   mkl_free(b);
-   mkl_free(c);
+   _mm_free(a);
+   _mm_free(b);
+   _mm_free(c);
 
    return 0;
 }
