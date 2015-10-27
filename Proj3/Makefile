@@ -10,18 +10,18 @@ GCC = icc
 CFLAGS = -O3 -openmp -g -restrict -std=c99 -debug inline-debug-info
 CFLAGS += -qopt-report=5 -qopt-report-phase=vec -mkl
 
-make: vectorSum.o mean_example.o
-	$(GCC) $(CFLAGS) -o vectorsum vectorSum.o
-	$(GCC) $(CFLAGS) -mmic -offload-build -o vectoranalyze mean_example.o
+make: vectorsum.o vectoranalyze.o
+	$(GCC) $(CFLAGS) -o vectorsum vectorsum.o
+	$(GCC) $(CFLAGS) -mkl -o vectoranalyze mean_example.o
 
 mic: CFLAGS += -mmic -offload-build
 mic: make
 
-vectorSum.o: vectorSum.c
-	$(GCC) $(CFLAGS) -c vectorSum.c
+vectorsum.o: vectorsum.c
+	$(GCC) $(CFLAGS) -c vectorsum.c
 
-mean_example.o: mean_example.c
-	$(GCC) $(CFLAGS) -c mean_example.c
+vectoranalyze.o: mean_example.c
+	$(GCC) $(CFLAGS) -c vectoranalyze.c
 	
 clean:
 	rm vectorSum.o vectorsum 

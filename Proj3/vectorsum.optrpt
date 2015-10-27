@@ -8,65 +8,65 @@ Begin optimization report for: main(int, char **)
     Report from: Vector optimizations [vec]
 
 
-LOOP BEGIN at vectorSum.c(60,4) inlined into vectorSum.c(141,8)
+LOOP BEGIN at vectorsum.c(60,4) inlined into vectorsum.c(141,8)
    remark #15520: loop was not vectorized: loop with multiple exits cannot be vectorized unless it meets search loop idiom criteria
 LOOP END
 
-LOOP BEGIN at vectorSum.c(73,4) inlined into vectorSum.c(141,8)
-   remark #15382: vectorization support: call to function fscanf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorSum.c(74,7) ]
+LOOP BEGIN at vectorsum.c(73,4) inlined into vectorsum.c(141,8)
+   remark #15382: vectorization support: call to function fscanf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorsum.c(74,7) ]
    remark #15344: loop was not vectorized: vector dependence prevents vectorization
    remark #15346: vector dependence: assumed OUTPUT dependence between val line 74 and vec line 75
    remark #15346: vector dependence: assumed OUTPUT dependence between vec line 75 and val line 74
 LOOP END
 
-LOOP BEGIN at vectorSum.c(60,4) inlined into vectorSum.c(144,8)
+LOOP BEGIN at vectorsum.c(60,4) inlined into vectorsum.c(144,8)
    remark #15520: loop was not vectorized: loop with multiple exits cannot be vectorized unless it meets search loop idiom criteria
 LOOP END
 
-LOOP BEGIN at vectorSum.c(73,4) inlined into vectorSum.c(144,8)
-   remark #15382: vectorization support: call to function fscanf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorSum.c(74,7) ]
+LOOP BEGIN at vectorsum.c(73,4) inlined into vectorsum.c(144,8)
+   remark #15382: vectorization support: call to function fscanf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorsum.c(74,7) ]
    remark #15344: loop was not vectorized: vector dependence prevents vectorization
    remark #15346: vector dependence: assumed OUTPUT dependence between val line 74 and vec line 75
    remark #15346: vector dependence: assumed OUTPUT dependence between vec line 75 and val line 74
 LOOP END
 
-LOOP BEGIN at vectorSum.c(114,4) inlined into vectorSum.c(165,4)
-   remark #15527: loop was not vectorized: function call to fprintf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorSum.c(115,7) ]
+LOOP BEGIN at vectorsum.c(114,4) inlined into vectorsum.c(165,4)
+   remark #15527: loop was not vectorized: function call to fprintf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorsum.c(115,7) ]
 LOOP END
 
-LOOP BEGIN at vectorSum.c(100,4) inlined into vectorSum.c(186,4)
+LOOP BEGIN at vectorsum.c(100,4) inlined into vectorsum.c(186,4)
    remark #15344: loop was not vectorized: vector dependence prevents vectorization
    remark #15346: vector dependence: assumed FLOW dependence between a_histogram line 105 and a_histogram line 105
    remark #15346: vector dependence: assumed ANTI dependence between a_histogram line 105 and a_histogram line 105
 LOOP END
 
-LOOP BEGIN at vectorSum.c(100,4) inlined into vectorSum.c(186,4)
+LOOP BEGIN at vectorsum.c(100,4) inlined into vectorsum.c(186,4)
 <Remainder>
 LOOP END
 
-LOOP BEGIN at vectorSum.c(100,4) inlined into vectorSum.c(187,4)
+LOOP BEGIN at vectorsum.c(100,4) inlined into vectorsum.c(187,4)
    remark #15344: loop was not vectorized: vector dependence prevents vectorization
    remark #15346: vector dependence: assumed FLOW dependence between c_histogram line 105 and c_histogram line 105
    remark #15346: vector dependence: assumed ANTI dependence between c_histogram line 105 and c_histogram line 105
 LOOP END
 
-LOOP BEGIN at vectorSum.c(100,4) inlined into vectorSum.c(188,4)
+LOOP BEGIN at vectorsum.c(100,4) inlined into vectorsum.c(188,4)
 LOOP END
 
-LOOP BEGIN at vectorSum.c(100,4) inlined into vectorSum.c(187,4)
+LOOP BEGIN at vectorsum.c(100,4) inlined into vectorsum.c(187,4)
 <Remainder>
 LOOP END
 
-LOOP BEGIN at vectorSum.c(123,4) inlined into vectorSum.c(190,4)
-   remark #15527: loop was not vectorized: function call to fprintf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorSum.c(124,7) ]
+LOOP BEGIN at vectorsum.c(123,4) inlined into vectorsum.c(190,4)
+   remark #15527: loop was not vectorized: function call to fprintf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorsum.c(124,7) ]
 LOOP END
 
-LOOP BEGIN at vectorSum.c(123,4) inlined into vectorSum.c(191,4)
-   remark #15527: loop was not vectorized: function call to fprintf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorSum.c(124,7) ]
+LOOP BEGIN at vectorsum.c(123,4) inlined into vectorsum.c(191,4)
+   remark #15527: loop was not vectorized: function call to fprintf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorsum.c(124,7) ]
 LOOP END
 
-LOOP BEGIN at vectorSum.c(123,4) inlined into vectorSum.c(192,4)
-   remark #15527: loop was not vectorized: function call to fprintf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorSum.c(124,7) ]
+LOOP BEGIN at vectorsum.c(123,4) inlined into vectorsum.c(192,4)
+   remark #15527: loop was not vectorized: function call to fprintf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorsum.c(124,7) ]
 LOOP END
 ===========================================================================
 
@@ -75,11 +75,11 @@ Begin optimization report for: readFile(char *, int *)
     Report from: Vector optimizations [vec]
 
 
-LOOP BEGIN at vectorSum.c(60,4)
+LOOP BEGIN at vectorsum.c(60,4)
    remark #15520: loop was not vectorized: loop with multiple exits cannot be vectorized unless it meets search loop idiom criteria
 LOOP END
 
-LOOP BEGIN at vectorSum.c(73,4)
+LOOP BEGIN at vectorsum.c(73,4)
    remark #15523: loop was not vectorized: loop control variable i was found, but loop iteration count cannot be computed before executing the loop
 LOOP END
 ===========================================================================
@@ -89,13 +89,13 @@ Begin optimization report for: vectorHistogration(float *__restrict__, int, int 
     Report from: Vector optimizations [vec]
 
 
-LOOP BEGIN at vectorSum.c(100,4)
+LOOP BEGIN at vectorsum.c(100,4)
    remark #15344: loop was not vectorized: vector dependence prevents vectorization
    remark #15346: vector dependence: assumed FLOW dependence between histogram line 105 and histogram line 105
    remark #15346: vector dependence: assumed ANTI dependence between histogram line 105 and histogram line 105
 LOOP END
 
-LOOP BEGIN at vectorSum.c(100,4)
+LOOP BEGIN at vectorsum.c(100,4)
 <Remainder>
 LOOP END
 ===========================================================================
@@ -105,8 +105,8 @@ Begin optimization report for: outputVector(float *, int)
     Report from: Vector optimizations [vec]
 
 
-LOOP BEGIN at vectorSum.c(114,4)
-   remark #15527: loop was not vectorized: function call to fprintf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorSum.c(115,7) ]
+LOOP BEGIN at vectorsum.c(114,4)
+   remark #15527: loop was not vectorized: function call to fprintf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorsum.c(115,7) ]
 LOOP END
 ===========================================================================
 
@@ -115,8 +115,8 @@ Begin optimization report for: outputHistogram(const char *, int *, int)
     Report from: Vector optimizations [vec]
 
 
-LOOP BEGIN at vectorSum.c(123,4)
-   remark #15527: loop was not vectorized: function call to fprintf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorSum.c(124,7) ]
+LOOP BEGIN at vectorsum.c(123,4)
+   remark #15527: loop was not vectorized: function call to fprintf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectorsum.c(124,7) ]
 LOOP END
 ===========================================================================
 Intel(R) Advisor can now assist with vectorization and show optimization
@@ -129,21 +129,21 @@ See "https://software.intel.com/en-us/intel-advisor-xe" for details.
     Report from: Vector optimizations [vec]
 
 
-LOOP BEGIN at vectorSum.c(90,7)
+LOOP BEGIN at vectorsum.c(90,7)
 <Peeled loop for vectorization>
-   remark #15389: vectorization support: reference c has unaligned access   [ vectorSum.c(91,10) ]
-   remark #15389: vectorization support: reference a has unaligned access   [ vectorSum.c(91,10) ]
-   remark #15389: vectorization support: reference b has unaligned access   [ vectorSum.c(91,10) ]
+   remark #15389: vectorization support: reference c has unaligned access   [ vectorsum.c(91,10) ]
+   remark #15389: vectorization support: reference a has unaligned access   [ vectorsum.c(91,10) ]
+   remark #15389: vectorization support: reference b has unaligned access   [ vectorsum.c(91,10) ]
    remark #15381: vectorization support: unaligned access used inside loop body
    remark #15305: vectorization support: vector length 16
    remark #15309: vectorization support: normalized vectorization overhead 0.562
    remark #15301: PEEL LOOP WAS VECTORIZED
 LOOP END
 
-LOOP BEGIN at vectorSum.c(90,7)
-   remark #15388: vectorization support: reference c has aligned access   [ vectorSum.c(91,10) ]
-   remark #15389: vectorization support: reference a has unaligned access   [ vectorSum.c(91,10) ]
-   remark #15388: vectorization support: reference b has aligned access   [ vectorSum.c(91,10) ]
+LOOP BEGIN at vectorsum.c(90,7)
+   remark #15388: vectorization support: reference c has aligned access   [ vectorsum.c(91,10) ]
+   remark #15389: vectorization support: reference a has unaligned access   [ vectorsum.c(91,10) ]
+   remark #15388: vectorization support: reference b has aligned access   [ vectorsum.c(91,10) ]
    remark #15381: vectorization support: unaligned access used inside loop body
    remark #15305: vectorization support: vector length 16
    remark #15399: vectorization support: unroll factor set to 2
@@ -157,18 +157,18 @@ LOOP BEGIN at vectorSum.c(90,7)
    remark #15488: --- end vector loop cost summary ---
 LOOP END
 
-LOOP BEGIN at vectorSum.c(90,7)
+LOOP BEGIN at vectorsum.c(90,7)
 <Alternate Alignment Vectorized Loop>
 LOOP END
 
-LOOP BEGIN at vectorSum.c(90,7)
+LOOP BEGIN at vectorsum.c(90,7)
 <Remainder loop for vectorization>
-   remark #15388: vectorization support: reference c has aligned access   [ vectorSum.c(91,10) ]
-   remark #15389: vectorization support: reference a has unaligned access   [ vectorSum.c(91,10) ]
-   remark #15389: vectorization support: reference b has unaligned access   [ vectorSum.c(91,10) ]
-   remark #15388: vectorization support: reference c has aligned access   [ vectorSum.c(91,10) ]
-   remark #15389: vectorization support: reference a has unaligned access   [ vectorSum.c(91,10) ]
-   remark #15389: vectorization support: reference b has unaligned access   [ vectorSum.c(91,10) ]
+   remark #15388: vectorization support: reference c has aligned access   [ vectorsum.c(91,10) ]
+   remark #15389: vectorization support: reference a has unaligned access   [ vectorsum.c(91,10) ]
+   remark #15389: vectorization support: reference b has unaligned access   [ vectorsum.c(91,10) ]
+   remark #15388: vectorization support: reference c has aligned access   [ vectorsum.c(91,10) ]
+   remark #15389: vectorization support: reference a has unaligned access   [ vectorsum.c(91,10) ]
+   remark #15389: vectorization support: reference b has unaligned access   [ vectorsum.c(91,10) ]
    remark #15381: vectorization support: unaligned access used inside loop body
    remark #15305: vectorization support: vector length 16
    remark #15309: vectorization support: normalized vectorization overhead 0.800

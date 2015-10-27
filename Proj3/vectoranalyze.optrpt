@@ -1,0 +1,35 @@
+Intel(R) Advisor can now assist with vectorization and show optimization
+  report messages with your source code.
+See "https://software.intel.com/en-us/intel-advisor-xe" for details.
+
+
+Begin optimization report for: main(int, char **)
+
+    Report from: Vector optimizations [vec]
+
+
+LOOP BEGIN at vectoranalyze.c(56,4) inlined into vectoranalyze.c(100,12)
+   remark #15520: loop was not vectorized: loop with multiple exits cannot be vectorized unless it meets search loop idiom criteria
+LOOP END
+
+LOOP BEGIN at vectoranalyze.c(69,4) inlined into vectoranalyze.c(100,12)
+   remark #15382: vectorization support: call to function fscanf(FILE *__restrict__, const char *__restrict__, ...) cannot be vectorized   [ vectoranalyze.c(70,7) ]
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization
+   remark #15346: vector dependence: assumed OUTPUT dependence between val line 70 and vec line 71
+   remark #15346: vector dependence: assumed OUTPUT dependence between vec line 71 and val line 70
+LOOP END
+===========================================================================
+
+Begin optimization report for: readFile(char *, int *)
+
+    Report from: Vector optimizations [vec]
+
+
+LOOP BEGIN at vectoranalyze.c(56,4)
+   remark #15520: loop was not vectorized: loop with multiple exits cannot be vectorized unless it meets search loop idiom criteria
+LOOP END
+
+LOOP BEGIN at vectoranalyze.c(69,4)
+   remark #15523: loop was not vectorized: loop control variable i was found, but loop iteration count cannot be computed before executing the loop
+LOOP END
+===========================================================================
