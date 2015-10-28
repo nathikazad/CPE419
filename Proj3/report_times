@@ -1,0 +1,68 @@
+export LD_LIBRARY_PATH="/opt/intel/mkl/lib/mic:/opt/intel/lib/mic"   //run this on mic everytime or soemhow automate it
+for mic: icc -mkl -mmic vectoranalyze.c
+for native: icc -mkl vectoranalyze.c
+
+SUM TIMES
+10000
+	Total   7.474s
+	Phi     1.225s
+100000
+	Total   7.598s
+	Phi     1.200s
+1000000
+	Total   8.420s
+	Phi     1.254s
+10000000
+	Total  17.205s
+	Phi     1.562s
+100000000
+	Total 104.138s
+	Phi     5.932s
+
+
+Part B
+10000
+	Minimum value: -19.480000
+	Maximum value: 19.610000
+	Mean: 3.291884
+	Standard Deviation:7.825023
+	Median: 3.840000
+	Time Taken for Mean and Standard Deviation calculation:0.072259s
+	Time Taken for Minimum, Median, Maximum and Sorting:0.003193s
+	Time Taken Total:0.391s
+100000
+	Minimum value: -19.990000
+	Maximum value: 19.910000
+	Mean: 3.310452 
+	Standard Deviation:7.800153
+	Median: 3.740000
+	Time Taken for Mean and Standard Deviation calculation:0.139614s
+	Time Taken for Minimum, Median, Maximum and Sorting:0.032713s
+	Time Taken Total:0.842s
+1000000
+	Minimum value: -19.940000
+	Maximum value: 19.990000
+	Mean: 3.333653 Time Taken:0.330867
+	Standard Deviation:7.824677
+	Median: 3.750000
+	Time Taken for Mean and Standard Deviation calculation:0.330867s
+	Time Taken for Minimum, Median, Maximum and Sorting:0.419350s
+	Time Taken Total:6.386s
+10000000
+	Minimum value: -20.000000
+	Maximum value: 20.000000
+	Mean: 3.336722 Time Taken:1.303946
+	Standard Deviation:7.816363
+	Median: 3.760000
+	Time Taken for Mean and Standard Deviation calculation:1.303946s
+	Time Taken for Minimum, Median, Maximum and Sorting:4.294881s
+	Time Taken Total:60.242s
+100000000
+	Minimum value: -20.000000
+	Maximum value: 20.000000
+	Mean: 3.332712
+	Standard Deviation:7.816588
+	Median: 3.750000
+	Time Taken for Mean and Standard Deviation calculation:7.173115s
+	Time Taken for Minimum, Median, Maximum and Sorting:48.877016s
+	Time Taken Total:604.567s

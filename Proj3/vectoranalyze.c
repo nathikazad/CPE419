@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
    timeval_subtract(&tvSortingTime, &tvEnd, &tvBegin);
    printf("Minimum value: %lf\n", array[0]);
    printf("Maximum value: %lf\n", array[length-1]);
-   printf("Mean: %lf Time Taken:%ld.%06ld\n",mean[0],tvMeanSTD.tv_sec, tvMeanSTD.tv_usec);
+   printf("Mean: %lf \n",mean[0]);
    printf("Standard Deviation:%lf\n",variation[0]*mean[0]);
    if(length%2)
       printf("Median: %lf\n",array[length/2]);
