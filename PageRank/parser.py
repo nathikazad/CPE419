@@ -114,7 +114,7 @@ def parse_csv(file):
 
   return (nodes, out_degrees, in_degrees)
 
-def main():
+#def main():
   # Testing Purposes
   #parse_snap(sys.argv[1])
   #parse_csv(sys.argv[1])
