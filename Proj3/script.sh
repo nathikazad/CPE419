@@ -23,8 +23,8 @@ time vectorsum /home/clupo/vectors/10000000.a /home/clupo/vectors/10000000.b
 time vectorsum /home/clupo/vectors/10000000.a /home/clupo/vectors/10000000.b
 time vectorsum /home/clupo/vectors/10000000.a /home/clupo/vectors/10000000.b
 
-#echo 100000000
-#time vectorsum /home/clupo/vectors/100000000.a /home/clupo/vectors/100000000.b
-#time vectorsum /home/clupo/vectors/100000000.a /home/clupo/vectors/100000000.b
-#time vectorsum /home/clupo/vectors/100000000.a /home/clupo/vectors/100000000.b
+echo 100000000
+time vectorsum /home/clupo/vectors/100000000.a /home/clupo/vectors/100000000.b
+time vectorsum /home/clupo/vectors/100000000.a /home/clupo/vectors/100000000.b
+time vectorsum /home/clupo/vectors/100000000.a /home/clupo/vectors/100000000.b
 exit

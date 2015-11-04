@@ -12,11 +12,21 @@
 float *allocateMemory(int length) {
    
    float *vec;
-
    if ((vec = (float *)_mm_malloc(length * sizeof(float), VEC_ALIGN)) == NULL) {
       fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
       exit(1);
    }
+   return vec;
+}
+
+int *allocateMemory_Int(int length) {
+
+   int *vec;
+   if ((vec = (int *)_mm_malloc(length * sizeof(int), VEC_ALIGN)) == NULL) {
+      fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
+      exit(1);
+   }
+   memset(vec, 0, length);
    return vec;
 }
 
@@ -68,12 +78,14 @@ float *readFile(char *fileName, int *length) {
    return vec;
 }
 
+// function that is offloaded to Xeon Phi that computes vector sum
 float *vectorSummation(float * restrict a, float * restrict b, int length) {
 
    float *restrict c = allocateMemory(length);
    int i;
 
-   #pragma offload target(mic:0) in (i) in(a:length(length)) in(b:length(length)) out(c:length(length))
+   #pragma offload target(mic:0) in (i) in(a:length(length)) \
+      in(b:length(length)) out(c:length(length))
    {
       #pragma omp parallel for private(i) shared(a, b, c, length)
       for (i = 0; i < length; i++)
@@ -83,45 +95,53 @@ float *vectorSummation(float * restrict a, float * restrict b, int length) {
    return c;
 }
 
-void vectorHistogration(float * restrict vector, int vector_length, int * restrict histogram, 
-   int hist_length, float start, float end) {
+// function that is offloaded to Xeon Phi that computes histograms
+void vectorHistogration(float * restrict vector, int vector_length,
+   int * restrict histogram, int hist_length, float start, float end) {
    
-   int* restrict temp;
    int threadCount = omp_get_max_threads();
-   int size = threadCount * hist_length * sizeof(int);
 
-   if ((temp = (int *)_mm_malloc(size, VEC_ALIGN)) == NULL) {
-      fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
-      exit(1);
-   }
-
-   memset(temp, 0, size);
-
-   #pragma offload target(mic:0) in (threadCount, vector_length, hist_length, end) in(vector:length(vector_length)) \
-      in(temp:length(size)) out(histogram:length(hist_length)) 
+   #pragma offload target(mic:0) in (threadCount, vector_length, hist_length, end) \
+      in(vector:length(vector_length)) inout(histogram:length(hist_length))
    {
       int i, index;
-      
-      #pragma omp parallel private (i, index) shared (vector, histogram, temp, vector_length, hist_length, end, threadCount)
-      {
-         int threadId = omp_get_thread_num();
-	 #pragma omp for  
-	 for (i = 0; i < vector_length; i++) {
-	    index = (int)((vector[i] + end) * (hist_length / (2 * end)));
-	    if (index == hist_length)
-	       index--;
-	    temp[hist_length * threadId + index] += 1;
-	 }
+      int * restrict temp;
+      int size = threadCount * hist_length * sizeof(int);
 
+      // creates a temporary array
+      if ((temp = (int *)_mm_malloc(size, VEC_ALIGN)) == NULL) {
+         fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
+         exit(1);
       }
 	
-	 //#pragma omp for
-	 for (i = 0; i < hist_length; i++) {
-	    for (index = 0; index < threadCount; index++)
+      memset(temp, 0, size);
+      
+      #pragma omp parallel private (i, index) shared (vector, histogram, temp, \
+         vector_length, hist_length, end, threadCount)
+      {
+         int threadId = omp_get_thread_num();
+
+         // creates a histogram-per-thread in parallel
+	      #pragma omp for
+         for (i = 0; i < vector_length; i++) {
+            // calculates index between 0 and 39
+            index = (int)((vector[i] + end) * (hist_length / (2 * end)));
+            if (index == hist_length)
+               index--;
+            temp[hist_length * threadId + index] += 1;
+         }
+	
+         // perform reduction into a single array
+	      #pragma omp for
+         for (i = 0; i < hist_length; i++) {
+            for (index = 0; index < threadCount; index++) {
                histogram[i] += temp[hist_length * index + i];
-	}
+            }
+         }
+      }
+
+      _mm_free(temp);
    }
-   _mm_free(temp);
 }
 // writes the product vector to an output file
 void outputVector(float *vec, int length) {
@@ -134,6 +154,7 @@ void outputVector(float *vec, int length) {
    fclose(outFile);
 }
 
+// writes histogram to output file
 void outputHistogram(const char* filename, int *hist, int length) {
 
    FILE *outFile = fopen(filename, "w+");
@@ -148,7 +169,7 @@ int main(int argc, char **argv) {
 
    float *restrict a = NULL, *restrict b = NULL, * c;
    int * restrict a_histogram, * restrict b_histogram, * restrict c_histogram;
-   int lengthA = 0, lengthB = 0;
+   int lengthA = 0, lengthB = 0, bin_size = NUM_BINS * sizeof(int); 
 
    if (argc != 3) {
       fprintf(stderr, "PLEASE SPECIFY FILES! ERROR: %s\n", strerror(errno));
@@ -157,47 +178,46 @@ int main(int argc, char **argv) {
 
    omp_set_num_threads(224);
 
-   // Loads the first input vector
+   // loads the first input vector
    a = readFile(argv[1], &lengthA);
 
-   // Loads the second input vector
+   // loads the second input vector
    b = readFile(argv[2], &lengthB);
 
-   // Checks to see if the input vectors can be added together
+   // checks to see if the input vectors can be added together
    if (lengthA != lengthB) {
       fprintf(stderr, "INVALID VECTORS! ERROR: %d != %d\n", lengthA, lengthB);
       exit(1);
    }
 
+   // vector summation
    c = vectorSummation(a, b, lengthA);
 
+   // write summed vector to file
    outputVector(c, lengthA);
 
-   if ((a_histogram = (int *)_mm_malloc(40 * sizeof(int), VEC_ALIGN)) == NULL) {
-      fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
-      exit(1);
-   }
-   if ((b_histogram = (int *)_mm_malloc(40 * sizeof(int), VEC_ALIGN)) == NULL) {
-      fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
-      exit(1);
-   }
-   if ((c_histogram = (int *)_mm_malloc(40 * sizeof(int), VEC_ALIGN)) == NULL) {
-      fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
-      exit(1);
-   }
+   // creates arrays for histograms
+   a_histogram = allocateMemory_Int(bin_size);
+   b_histogram = allocateMemory_Int(bin_size);
+   c_histogram = allocateMemory_Int(bin_size);
  
+   // populate histograms
    vectorHistogration(a, lengthA, a_histogram, 40, -10.0, 10.0);
    vectorHistogration(b, lengthB, b_histogram, 40, -10.0, 10.0);
    vectorHistogration(c, lengthB, c_histogram, 40, -20.0, 20.0);
  
+   // output histograms
    outputHistogram(a_histogram_filename, a_histogram, 40);
    outputHistogram(b_histogram_filename, b_histogram, 40);
    outputHistogram(c_histogram_filename, c_histogram, 40);
    
-   // Frees vector memory
+   // frees vector and histogram memory
    _mm_free(a);
    _mm_free(b);
    _mm_free(c);
+   _mm_free(a_histogram);
+   _mm_free(b_histogram);
+   _mm_free(c_histogram);
 
    return 0;
 }

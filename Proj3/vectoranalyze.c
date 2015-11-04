@@ -1,4 +1,11 @@
-// Function that allocates memory for the vectors
+/*
+ * Author: Eric Dazet (edazet) and Nathik Salam (nsalam)
+ * CPE 419
+ * 27 October 2015
+ *
+ * Assignment 4: Vector Analysis
+ */
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -22,7 +29,9 @@
 
 int timeval_subtract(struct timeval *result, struct timeval *t2, struct timeval *t1)
 {
-    long int diff = (t2->tv_usec + 1000000 * t2->tv_sec) - (t1->tv_usec + 1000000 * t1->tv_sec);
+    long int diff = (t2->tv_usec + 1000000 * t2->tv_sec) -
+       (t1->tv_usec + 1000000 * t1->tv_sec);
+
     result->tv_sec = diff / 1000000;
     result->tv_usec = diff % 1000000;
 
@@ -88,7 +97,7 @@ double *readFile(char *fileName, int *length) {
    return vec;
 }
 
-// // writes the product vector to an output file
+// writes the product vector to an output file
 void outputVector(double *vec, int length) {
 
    FILE *outFile = fopen("sorted_result.out", "w+");
@@ -106,7 +115,7 @@ int main(int argc, char **argv) {
    VSLSSTaskPtr task;
    double mean[1],variation[1], r2m[1], c2m[1]; 
    double* w = 0;
-   struct timeval tvBegin, tvEnd, tvMeanSTD, tvSortingTime;
+   struct timeval tvBegin, tvEnd, tvMeanSTD, tvSortingTime, tvMin, tvMax, tvMedian;
    MKL_INT p, n, xstorage, covstorage;
 
    if (argc != 2) {
@@ -117,7 +126,6 @@ int main(int argc, char **argv) {
    // Loads the first input vector
    array = readFile(argv[1], &length);
 
-
    p = 1;
    n = length;
    xstorage = VSL_SS_MATRIX_STORAGE_ROWS;
@@ -126,39 +134,61 @@ int main(int argc, char **argv) {
    errcode = vsldSSEditMoments( task, mean, r2m, 0, 0, c2m, 0, 0 );
    MKL_INT estimates = VSL_SS_MEAN| VSL_SS_VARIATION;
    
+   // finds mean and variation, calculates operation time
    gettimeofday(&tvBegin, NULL);
    int status = vsldSSCompute( task, estimates, VSL_SS_METHOD_FAST );
    gettimeofday(&tvEnd, NULL);
    timeval_subtract(&tvMeanSTD, &tvEnd, &tvBegin);
 
    status = vslSSDeleteTask( &task );
+
+   // sorts array, calculates operation time
    gettimeofday(&tvBegin, NULL);
    LAPACKE_dlasrt ('I' , length , array );
    gettimeofday(&tvEnd, NULL);
    timeval_subtract(&tvSortingTime, &tvEnd, &tvBegin);
+
+   // finds minimum value, calculates operation time
+   gettimeofday(&tvBegin, NULL);
    printf("Minimum value: %lf\n", array[0]);
+   gettimeofday(&tvEnd, NULL);
+   timeval_subtract(&tvMin, &tvEnd, &tvBegin);
+
+   // finds maximum value, calculates operation time
+   gettimeofday(&tvBegin, NULL);
    printf("Maximum value: %lf\n", array[length-1]);
+   gettimeofday(&tvEnd, NULL);
+   timeval_subtract(&tvMax, &tvEnd, &tvBegin);
+
+   // finds median value, calculates operation time
+   gettimeofday(&tvBegin, NULL);
+   if (length % 2)
+      printf("Median: %lf\n", array[length / 2]);
+   else
+      printf("Median: %lf\n",(array[length / 2] + array[length / 2 - 1])
+         / (double)2.0);
+
+   gettimeofday(&tvEnd, NULL);
+   timeval_subtract(&tvMedian, &tvEnd, &tvBegin);
+
    printf("Mean: %lf \n",mean[0]);
    printf("Standard Deviation:%lf\n",variation[0]*mean[0]);
-   if(length%2)
-      printf("Median: %lf\n",array[length/2]);
-   else
-      printf("Median: %lf\n",(array[length/2]+array[length/2-1])/(double)2.0);
-   printf("Time Taken for Mean and Standard Deviation calculation:%ld.%06lds\n", tvMeanSTD.tv_sec, tvMeanSTD.tv_usec);
-   printf("Time Taken for Minimum, Median, Maximum and Sorting:%ld.%06lds\n", tvSortingTime.tv_sec, tvSortingTime.tv_usec);
+
+   printf("Time Taken for Mean and Standard Deviation: %ld.%06lds\n",
+      tvMeanSTD.tv_sec, tvMeanSTD.tv_usec);
+
+   printf("Time Taken for Sorting: %ld.%06lds\n", tvSortingTime.tv_sec,
+      tvSortingTime.tv_usec);
+
+   printf("Time Taken for Minimum: %ld.%06lds\n", tvMin.tv_sec, tvMin.tv_usec);
+   printf("Time Taken for Maximum: %ld.%06lds\n", tvMax.tv_sec, tvMax.tv_usec);
+   printf("Time Taken for Median: %ld.%06lds\n", tvMedian.tv_sec, tvMedian.tv_usec);
+
+   // writes sorted array to output file
    outputVector(array, length);
-   // struct timeval tvBegin, tvEnd, tvDiff;
-   // gettimeofday(&tvBegin, NULL);  
-   // gettimeofday(&tvEnd, NULL);
-   // timeval_subtract(&tvDiff, &tvEnd, &tvBegin);
-   // printf("Phi Time: %ld.%06ld\n", tvDiff.tv_sec, tvDiff.tv_usec);
 
-
-
-   
-   // Frees vector memory
+   //frees array
    _mm_free(array);
-
 
    return 0;
 }

@@ -1,0 +1,9 @@
+Eric Dazet (edazet) and Nathik Salam (nsalam)
+CPE 419-01
+27 October 2015
+
+Simply typing "make" will compile both programs, called vectorsum and vectoranalysis
+
+We decided to not use the Intel MKL library for part A, but we did use it for Part B
+
+We also think that we didn't see some of the better benefits from the Xeon Phi due to the time it took to read in and write out files.

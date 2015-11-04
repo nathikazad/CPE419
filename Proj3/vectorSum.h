@@ -24,6 +24,8 @@ const char* a_histogram_filename = "hist.a";
 const char* b_histogram_filename = "hist.b";
 const char* c_histogram_filename = "hist.c";
 
+#define NUM_BINS 40
+
 #ifdef _MIC_
 #define VEC_ALIGN 64
 #else
