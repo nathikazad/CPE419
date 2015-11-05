@@ -17,6 +17,8 @@ in_degrees = {}         # Dictionary of in-degrees. Key: Node ID, Value: List of
                         #   nodes pointing to it (strings)
 out_degrees = {}        # Dictionary of out-degrees. Key: Node ID, Value: Int
                         #   representing the number of nodes it points to.
+names = {}		# Dictionary of names. Key: String, Value: Corresponding 
+			#   Number
 
 def parse_snap(file):
   '''
@@ -47,7 +49,7 @@ def parse_snap(file):
 
   return (nodes, out_degrees, in_degrees)
 
-def parse_weighted_csv(file):
+def parse_weighted_csv(file, string_conv):
   '''
   See 'parse_csv' function.
   
@@ -55,7 +57,9 @@ def parse_weighted_csv(file):
   N1-val > N2-val, the in-degree is to N1 and the out-degree is to N2 (and 
   vice versa for N2-val > N1-val)
   '''
-  global nodes, in_degrees, out_degrees
+  global nodes, in_degrees, out_degrees, names
+
+  counter = 0
 
   with open(file, 'r') as f:
     reader = csv.DictReader(f, fieldnames=['N1', 'N1-val', 'N2', 'N2-val'])
@@ -63,7 +67,23 @@ def parse_weighted_csv(file):
       n_one = row['N1'].strip('"')
       n_two = row['N2'].strip('"')
 
+      if n_one in names:
+         n_one = names[n_one]
+      else:
+         counter += 1
+         names.update({n_one: counter})
+         n_one = counter
+
+      print n_one
       nodes.add(n_one)
+
+      if n_two in names:
+         n_two = names[n_two]
+      else:
+         counter += 1
+         names.update({n_two: counter})
+         n_two = counter
+
       nodes.add(n_two)
 
       val_one = int(row['N1-val'].strip())
@@ -81,9 +101,9 @@ def parse_weighted_csv(file):
           in_degrees[n_one] = []
         (in_degrees.get(n_one, [])).append(n_two)
       
-  return (nodes, out_degrees, in_degrees)
+  return (nodes, out_degrees, in_degrees, names)
 
-def parse_csv(file):
+def parse_csv(file, string_conv):
   '''
   Parses a csv file and creates a 'graph'. Each csv row is assumed to have the
   format: Node1, Node1-value, Node2, Node2-value. For the most part, we ignore
@@ -95,24 +115,47 @@ def parse_csv(file):
   Returns a tuple (list, dictionary [of ints], dictionary [of list of strings])
   '''
 
-  global nodes, in_degrees, out_degrees
+  global nodes, in_degrees, out_degrees, names
+
+  counter = 0
 
   with open(file, 'r') as f:
     reader = csv.DictReader(f, fieldnames=['N1', 'N1-val', 'N2', 'N2-val'])
     for row in reader:
-      nodes.add(row['N1'])
-      nodes.add(row['N2'])
-      
-      if in_degrees.get(row['N2']) is None:
-        in_degrees[row['N2']] = []
+      n_one = row['N1']
+      n_two = row['N2']
+     
+      if string_conv == 'y': 
+         if n_one in names:
+            n_one = names[n_one]
+         else:
+            names.update({n_one: counter})
+            n_one = counter
+            counter += 1
+
+      nodes.add(n_one)
+
+      if string_conv == 'y':
+         if n_two in names:
+            n_two = names[n_two]
+         else:
+            names.update({n_two: counter})
+            n_two = counter
+            counter += 1
+
+      nodes.add(n_two)
+
+      if in_degrees.get(n_two) is None:
+        in_degrees[n_two] = []
 
       # Increment number of out-degrees N1 has
-      out_degrees[row['N1']] = out_degrees.get(row['N1'], 0) + 1
+      out_degrees[n_one] = out_degrees.get(n_one, 0) + 1
       
       # Add 'N1' to N2's list of in-degrees
-      (in_degrees.get(row['N2'], [])).append(row['N1'])
+      (in_degrees.get(n_two, [])).append(n_one)
 
-  return (nodes, out_degrees, in_degrees)
+  names = dict((v, k) for k, v in names.iteritems())
+  return (nodes, out_degrees, in_degrees, names)
 
 #def main():
   # Testing Purposes

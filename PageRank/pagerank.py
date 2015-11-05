@@ -44,7 +44,7 @@ def vec_length(d):
 
   return math.sqrt(sum)
 
-def page_rank(num_iters):
+def page_rank(num_iters, names, string_conv):
   '''
   Page Rank algorithm. We keep track of the number of iterations for statistics.
   Initially, all nodes have page rank 1/(number of nodes). Then we use the 
@@ -69,10 +69,13 @@ def page_rank(num_iters):
     for i, w in enumerate(sorted(page_ranks, key=page_ranks.get, reverse = True)):
       if i > 20:
         return num_iters
-      print w, page_ranks[w]
+      if string_conv == 'y':
+         print names[w], page_ranks[w]
+      else:
+         print w, page_ranks[w]
   else:
     previous_ranks = page_ranks.copy()
-    num_iters = page_rank(num_iters)
+    num_iters = page_rank(num_iters, names, string_conv)
   return num_iters
 
 def main():

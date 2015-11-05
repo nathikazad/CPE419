@@ -21,7 +21,7 @@ def main():
   file is a csv or snap file, then the file name.
    
   Ex:
-    > python lab3.py [-w]
+    > python lab3.py [-w, -c]
     CSC 466: Lab 3 - Page Rank & Link Analysis
     Parse:
       1) csv
@@ -51,6 +51,7 @@ def main():
                          '2) snap\n'
                         )
   file_name = raw_input('File name: ')
+  string_conv = raw_input('File contains strings? (y/n): ')
   
   # PARSING - CSV Files
   # Note: The algorithm is the same, just parsing is different.
@@ -60,9 +61,13 @@ def main():
     
     # Parses a csv file and returns a tuple (list, dictionary, dictionary)
     if is_weighted == False:
-      (nodes, out_degrees, in_degrees) = parser.parse_csv(file_name)
+      (nodes, out_degrees, in_degrees, names) = parser.parse_csv(file_name, string_conv)
     else:
-      (nodes, out_degrees, in_degrees) = parser.parse_weighted_csv(file_name)
+      (nodes, out_degrees, in_degrees, names) = parser.parse_weighted_csv(file_name, string_conv)
+
+    for node in nodes:
+       for i in range (0, out_degrees[node]):
+          print str(names[node]) + " " + str(names[in_degrees[node][i]])
       
     end = time.time()
     print('Parse/Graph Set-up Time: ' + str(end - start) + ' seconds')
@@ -73,7 +78,7 @@ def main():
     # PAGE RANKING
     print('Page Ranking...')
     start = time.time()
-    num_iters = pagerank.page_rank(0)  # Stores # of page rank iterations
+    num_iters = pagerank.page_rank(0, names, string_conv)  # Stores # of page rank iterations
     end = time.time()
     
     # Statistics
@@ -87,7 +92,7 @@ def main():
     
     # Parses a SNAP file and returns a tuple (list, dictionary, dictionary)
     (nodes, out_degrees, in_degrees) = parser.parse_snap(file_name)
-    
+   
     end = time.time()
     print('Parse/Graph Set-up Time: ' + str(end-start) + 'seconds')
 
@@ -97,7 +102,7 @@ def main():
     # PAGE RANKING
     print('Page Ranking...')
     start = time.time()
-    num_iters = pagerank.page_rank(0)  # Stores # of page rank iterations
+    num_iters = pagerank.page_rank(0, names, string_conv)  # Stores # of page rank iterations
     end = time.time()
     
     # Statistics
