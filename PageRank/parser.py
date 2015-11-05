@@ -67,25 +67,25 @@ def parse_weighted_csv(file, string_conv):
       n_one = row['N1'].strip('"')
       n_two = row['N2'].strip('"')
 
-      if n_one in names:
-         n_one = names[n_one]
-      else:
-         counter += 1
-         names.update({n_one: counter})
-         n_one = counter
+      if string_conv == 'y': 
+         if n_one in names:
+            n_one = names[n_one]
+         else:
+            names.update({n_one: counter})
+            n_one = counter
+            counter += 1
 
-      print n_one
       nodes.add(n_one)
 
-      if n_two in names:
-         n_two = names[n_two]
-      else:
-         counter += 1
-         names.update({n_two: counter})
-         n_two = counter
+      if string_conv == 'y':
+         if n_two in names:
+            n_two = names[n_two]
+         else:
+            names.update({n_two: counter})
+            n_two = counter
+            counter += 1
 
       nodes.add(n_two)
-
       val_one = int(row['N1-val'].strip())
       val_two = int(row['N2-val'].strip())
       if val_one < val_two:
@@ -101,6 +101,7 @@ def parse_weighted_csv(file, string_conv):
           in_degrees[n_one] = []
         (in_degrees.get(n_one, [])).append(n_two)
       
+  names = dict((v, k) for k, v in names.iteritems())
   return (nodes, out_degrees, in_degrees, names)
 
 def parse_csv(file, string_conv):
