@@ -1,5 +1,5 @@
 -------------------
-Dolphins.csv
+dolphins.csv
 -------------------
 Grin 0.0321444715593
 Jet 0.0317281771596
@@ -294,6 +294,12 @@ wiki-Vote.txt
 6832 0.000738332838156
 Page Rank Time: 2.6409509182 seconds
 Page Rank Iterations: 38
+
+--------------------
+soc-LiveJournal1.txt
+--------------------
+Page Rank Time: 5503.36173701 seconds
+Page Rank Iterations: 67
 
 
 

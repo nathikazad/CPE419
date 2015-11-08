@@ -14,6 +14,25 @@ import pagerank
 import parser
 import sys
 import time
+import subprocess
+from subprocess import Popen, PIPE, STDOUT
+
+def specs():
+    
+    dictionary = {}
+    dictionary.update({"dolphins.csv": [49, 62, 318]})
+    dictionary.update({"karate.csv": [38, 34, 156]})
+    dictionary.update({"lesmis.csv": [61, 77, 508]})
+    dictionary.update({"NCAA_football.csv": [3, 570, 1537]})
+    dictionary.update({"polblogs.csv": [71, 1224, 19090]})
+    dictionary.update({"stateborders.csv": [93, 51, 214]})
+    dictionary.update({"amazon0505.txt": [85, 410236, 3356824]})
+    dictionary.update({"p2p-Gnutella05.txt": [21, 8846, 31839]})
+    dictionary.update({"soc-sign-Slashdot081106.txt": [64, 77350, 516575]})
+    dictionary.update({"wiki-Vote.txt": [38, 7115, 103689]})
+    dictionary.update({"soc-LiveJournal1.txt": [67, 4847571, 68993773]})
+    
+    return dictionary
 
 def main():
   '''
@@ -36,6 +55,8 @@ def main():
    
   Note: -w doesn't quite work at the moment. Please ignore it for now.
   '''
+    
+  fileSpecs = specs()
   
   is_weighted = False      # Used for '-w' flag
 
@@ -51,54 +72,56 @@ def main():
                          '2) snap\n'
                         )
   file_name = raw_input('File name: ')
-  string_conv = raw_input('File contains strings? (y/n): ')
+  version = raw_input('Xeon Phi, Cuda or Both? (x/c/b): ')
   
   # PARSING - CSV Files
   # Note: The algorithm is the same, just parsing is different.
-  if parse_menu == '1':
-    print('Parsing/Creating Graph...')
-    start = time.time()    # Tracking time
+  if parse_menu == '1' or parse_menu == '2':
+    if parse_menu == '1':
+      print('Parsing/Creating Graph...')
+      start = time.time()    # Tracking time
     
-    # Parses a csv file and returns a tuple (list, dictionary, dictionary)
-    if is_weighted == False:
-      (nodes, out_degrees, in_degrees, names) = parser.parse_csv(file_name, string_conv)
-    else:
-      (nodes, out_degrees, in_degrees, names) = parser.parse_weighted_csv(file_name, string_conv)
-
-    '''
-    for node in nodes:
-       for i in range (0, out_degrees[node]):
-          if string_conv == 'y':
-             print str(names[node]) + " " + str(names[in_degrees[node][i]])
-          else:
-             print str(node) + " " + str(in_degrees[node][i])
-    '''  
-    end = time.time()
-    print('Parse/Graph Set-up Time: ' + str(end - start) + ' seconds')
-
-    # Sets up page rank structures
-    pagerank.set_up(nodes, out_degrees, in_degrees)
-
-    # PAGE RANKING
-    print('Page Ranking...')
-    start = time.time()
-    num_iters = pagerank.page_rank(0, names, string_conv)  # Stores # of page rank iterations
-    end = time.time()
-    
-    # Statistics
-    print('Page Rank Time: ' + str(end-start) + ' seconds')
-    print('Page Rank Iterations: ' + str(num_iters))
+      # Parses a csv file and returns a tuple (list, dictionary, dictionary)
+      if is_weighted == False:
+        (nodes, out_degrees, in_degrees, names) = parser.parse_csv(file_name)
+      else:
+        (nodes, out_degrees, in_degrees, names) = parser.parse_weighted_csv(file_name)
+     
+      end = time.time()
+      print('Parse/Graph Set-up Time: ' + str(end - start) + ' seconds')
 
   # PARSING - SNAP Files
-  elif parse_menu == '2':
-    print('Parsing/Creating Graph...')
-    start = time.time()    # Tracking time
+    else:
+      print('Parsing/Creating Graph...')
+      start = time.time()    # Tracking time
     
-    # Parses a SNAP file and returns a tuple (list, dictionary, dictionary)
-    (nodes, out_degrees, in_degrees) = parser.parse_snap(file_name)
+      # Parses a SNAP file and returns a tuple (list, dictionary, dictionary)
+      (nodes, out_degrees, in_degrees, names) = parser.parse_snap(file_name)
    
-    end = time.time()
-    print('Parse/Graph Set-up Time: ' + str(end-start) + 'seconds')
+      end = time.time()
+      print('Parse/Graph Set-up Time: ' + str(end-start) + 'seconds')
+    
+    '''
+    for node in nodes:
+      for i in range (0, len(in_degrees[node])):
+        print str(node) + " " + str(in_degrees[node][i])
+    '''
+    
+    if file_name.rfind('/') != '-1':
+       file_name = file_name[file_name.rfind('/') + 1:len(file_name)]
+
+    (numIterations, numNodes, numEdges) = fileSpecs[file_name]
+    print numIterations, numNodes, numEdges
+    
+    '''
+    Call C Program
+    '''
+    phi_command = "./pr_phi " + str(numNodes) + " " + str(numEdges)
+    cuda_command = "./pr_cuda " + str(numNodes) + " " + str(numEdges)
+    
+    if version == 'x' or version == 'b':
+       p = subprocess.Popen(phi_command)
+    if version == 'c' or version == 'b':
 
     # Sets up page rank structures
     pagerank.set_up(nodes, out_degrees, in_degrees)
@@ -106,7 +129,7 @@ def main():
     # PAGE RANKING
     print('Page Ranking...')
     start = time.time()
-    num_iters = pagerank.page_rank(0, 0, string_conv)  # Stores # of page rank iterations
+    num_iters = pagerank.page_rank(0, names, parse_menu)  # Stores # of page rank iterations
     end = time.time()
     
     # Statistics

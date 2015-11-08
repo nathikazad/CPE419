@@ -30,7 +30,14 @@ def parse_snap(file):
   
   Returns a tuple (list, dictionary [of ints], dictionary [of list of strings])
   '''
-  global nodes, in_degrees, out_degrees
+  global nodes, in_degrees, out_degrees, names
+  
+  file_name = file
+  if file.rfind('/') != '-1':
+       file_name = file[file.rfind('/') + 1:len(file)]
+  
+  nameCheck = file_name == "wiki-Vote.txt"
+  map = 0
 
   with open(file, 'r') as f:
     for i, line in enumerate(f):
@@ -39,17 +46,36 @@ def parse_snap(file):
       if i % 1000 == 0:
         print i
       words = line.split()
-      nodes.add(words[0])
-      nodes.add(words[1])
-      if in_degrees.get(words[1]) is None:
-        in_degrees[words[1]] = []
+      n_one = words[0]
+      n_two = words[1]
 
-      out_degrees[words[0]] = out_degrees.get(words[0], 0) + 1
-      in_degrees[words[1]].append(words[0])
+      if nameCheck == True:
+        if n_one in names:
+           n_one = names[n_one]
+        else:
+           names.update({n_one: map})
+           n_one = map
+           map += 1
 
-  return (nodes, out_degrees, in_degrees)
+        if n_two in names:
+           n_two = names[n_two]
+        else:
+           names.update({n_two: map})
+           n_two = map
+           map += 1
+         
+      nodes.add(n_one)
+      nodes.add(n_two)
+      if in_degrees.get(n_two) is None:
+        in_degrees[n_two] = []
 
-def parse_weighted_csv(file, string_conv):
+      out_degrees[n_one] = out_degrees.get(n_one, 0) + 1
+      in_degrees[n_two].append(n_one)
+      
+  names = dict((v, k) for k, v in names.iteritems())
+  return (sorted(nodes), out_degrees, in_degrees, names)
+
+def parse_weighted_csv(file):
   '''
   See 'parse_csv' function.
   
@@ -59,32 +85,29 @@ def parse_weighted_csv(file, string_conv):
   '''
   global nodes, in_degrees, out_degrees, names
 
-  counter = 0
+  map = 0
 
   with open(file, 'r') as f:
     reader = csv.DictReader(f, fieldnames=['N1', 'N1-val', 'N2', 'N2-val'])
     for row in reader:
       n_one = row['N1'].strip('"')
       n_two = row['N2'].strip('"')
+ 
+      if n_one in names:
+         n_one = names[n_one]
+      else:
+         names.update({n_one: map})
+         n_one = map
+         map += 1
 
-      if string_conv == 'y': 
-         if n_one in names:
-            n_one = names[n_one]
-         else:
-            names.update({n_one: counter})
-            n_one = counter
-            counter += 1
-
+      if n_two in names:
+         n_two = names[n_two]
+      else:
+         names.update({n_two: map})
+         n_two = map
+         map += 1
+         
       nodes.add(n_one)
-
-      if string_conv == 'y':
-         if n_two in names:
-            n_two = names[n_two]
-         else:
-            names.update({n_two: counter})
-            n_two = counter
-            counter += 1
-
       nodes.add(n_two)
       val_one = int(row['N1-val'].strip())
       val_two = int(row['N2-val'].strip())
@@ -102,9 +125,9 @@ def parse_weighted_csv(file, string_conv):
         (in_degrees.get(n_one, [])).append(n_two)
       
   names = dict((v, k) for k, v in names.iteritems())
-  return (nodes, out_degrees, in_degrees, names)
+  return (sorted(nodes), out_degrees, in_degrees, names)
 
-def parse_csv(file, string_conv):
+def parse_csv(file):
   '''
   Parses a csv file and creates a 'graph'. Each csv row is assumed to have the
   format: Node1, Node1-value, Node2, Node2-value. For the most part, we ignore
@@ -118,32 +141,29 @@ def parse_csv(file, string_conv):
 
   global nodes, in_degrees, out_degrees, names
 
-  counter = 0
+  map = 0
 
   with open(file, 'r') as f:
     reader = csv.DictReader(f, fieldnames=['N1', 'N1-val', 'N2', 'N2-val'])
     for row in reader:
-      n_one = row['N1']
-      n_two = row['N2']
+      n_one = str(row['N1'])
+      n_two = str(row['N2'])
      
-      if string_conv == 'y': 
-         if n_one in names:
-            n_one = names[n_one]
-         else:
-            names.update({n_one: counter})
-            n_one = counter
-            counter += 1
+      if n_one in names:
+         n_one = names[n_one]
+      else:
+         names.update({n_one: map})
+         n_one = map
+         map += 1
+
+      if n_two in names:
+         n_two = names[n_two]
+      else:
+         names.update({n_two: map})
+         n_two = map
+         map += 1
 
       nodes.add(n_one)
-
-      if string_conv == 'y':
-         if n_two in names:
-            n_two = names[n_two]
-         else:
-            names.update({n_two: counter})
-            n_two = counter
-            counter += 1
-
       nodes.add(n_two)
 
       if in_degrees.get(n_two) is None:
@@ -156,7 +176,7 @@ def parse_csv(file, string_conv):
       (in_degrees.get(n_two, [])).append(n_one)
 
   names = dict((v, k) for k, v in names.iteritems())
-  return (nodes, out_degrees, in_degrees, names)
+  return (sorted(nodes), out_degrees, in_degrees, names)
 
 #def main():
   # Testing Purposes
