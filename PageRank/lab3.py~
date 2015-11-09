@@ -116,6 +116,8 @@ def main():
     '''
     Call C Program
     '''
+    phi_command = "./a.out " + str(numNodes) + " " + str(numEdges)
+    cuda_command = "./pr_cuda " + str(numNodes) + " " + str(numEdges)
     
     if version == 'x' or version == 'b':
        p = subprocess.Popen(['./a.out', str(numNodes), str(numEdges)], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
