@@ -16,6 +16,9 @@ import sys
 import time
 import subprocess
 from subprocess import Popen, PIPE, STDOUT
+import urlparse
+from collections import OrderedDict
+from operator import itemgetter
 
 def specs():
     
@@ -33,6 +36,24 @@ def specs():
     dictionary.update({"soc-LiveJournal1.txt": [67, 4847571, 68993773]})
     
     return dictionary
+
+def printPageRankValues(output, useNames, names):
+    mydict={}
+    for item in output.split(','):
+        spl = item.split(':')
+        if useNames == True:
+            mydict[names[int(spl[1])]] = spl[0]
+        else:
+            mydict[int(spl[1])] = spl[0]
+
+    mydict = OrderedDict(sorted(mydict.items(), key=itemgetter(1), reverse=True))
+
+    i = 0;
+    for x,w in mydict.iteritems():
+        if i > 20:
+            break
+        print str(x), str(w)
+        i += 1
 
 def main():
   '''
@@ -105,8 +126,10 @@ def main():
     for node in nodes:
       for i in range (0, len(in_degrees[node])):
         print str(node) + " " + str(in_degrees[node][i])
-    '''
     
+    for node in nodes:
+      print str(out_degrees[node])
+    '''
     if file_name.rfind('/') != '-1':
        file_name = file_name[file_name.rfind('/') + 1:len(file_name)]
 
@@ -118,23 +141,32 @@ def main():
     '''
     
     if version == 'x' or version == 'b':
-       p = subprocess.Popen(['./a.out', str(numNodes), str(numEdges)], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-       '''
+       p = subprocess.Popen(['./pr_phi', str(numNodes), str(numEdges), str(numIterations)], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+       
        for node in nodes:
-          for i in range (0, len(in_degrees[node])):
-             p.stdin.write('%d %d\n' % (int(node), int(in_degrees[node][i])))
-       '''
-       p.stdin.write('1 3\n')
-       p.stdin.write('2 3\n')
-       print p.communicate()
+          print "Node: " + str(node)
+          if out_degrees.get(node) is not None: print str(out_degrees[node])
+          if out_degrees.get(node) is None: print "None"
+          if in_degrees.get(node) is not None:
+             for i in range (0, len(in_degrees[node])):
+                p.stdin.write('%d %d\n' % (int(node), int(in_degrees[node][i])))
+             
+       output = p.communicate()[0]
+       output = output[:-1]
        p.stdin.close()
+       
+       useNames = parse_menu == '1' or file_name == "wiki-Vote.txt"
+       print str(useNames)
+       printPageRankValues(output, useNames, names)
 
     if version == 'c' or version == 'b':
        p = subprocess.Popen(cuda_command, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+       '''
        for node in nodes:
           for i in range (0, len(in_degress[node])):
              p.stdin.write('%d %d\n' % (int(node), int(in_degrees[node][i])))
-    '''
+       '''
+    
     # Sets up page rank structures
     pagerank.set_up(nodes, out_degrees, in_degrees)
 
@@ -147,7 +179,7 @@ def main():
     # Statistics
     print('Page Rank Time: ' + str(end-start) + ' seconds')
     print('Page Rank Iterations: ' + str(num_iters))
-    '''
+    
   
   # Wrong input
   else:

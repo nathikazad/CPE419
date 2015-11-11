@@ -73,7 +73,7 @@ def parse_snap(file):
       in_degrees[n_two].append(n_one)
       
   names = dict((v, k) for k, v in names.iteritems())
-  return (sorted(nodes), out_degrees, in_degrees, names)
+  return (sorted(nodes, key=int), out_degrees, in_degrees, names)
 
 def parse_weighted_csv(file):
   '''

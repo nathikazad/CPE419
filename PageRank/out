@@ -1,0 +1,10 @@
+CSC 466: Lab 3 - PageRank & Link Analysis
+Parse:
+1) csv
+2) snap
+Traceback (most recent call last):
+  File "lab3.py", line 189, in <module>
+    main()
+  File "lab3.py", line 93, in main
+    '2) snap\n'
+KeyboardInterrupt
