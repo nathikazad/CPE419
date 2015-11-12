@@ -43,8 +43,8 @@ def parse_snap(file):
     for i, line in enumerate(f):
       if line[0] == '#':
         continue
-      if i % 1000 == 0:
-        print i
+      #if i % 1000 == 0:
+        #print i
       words = line.split()
       n_one = words[0]
       n_two = words[1]

@@ -41,19 +41,15 @@ def printPageRankValues(output, useNames, names):
     mydict={}
     for item in output.split(','):
         spl = item.split(':')
-        if useNames == True:
-            mydict[names[int(spl[1])]] = spl[0]
-        else:
-            mydict[int(spl[1])] = spl[0]
-
-    mydict = OrderedDict(sorted(mydict.items(), key=itemgetter(1), reverse=True))
-
-    i = 0;
-    for x,w in mydict.iteritems():
-        if i > 20:
-            break
-        print str(x), str(w)
-        i += 1
+        mydict[int(spl[1])] = spl[0]
+        
+    for i, w in enumerate(sorted(mydict, key=mydict.get, reverse = True)):
+      if i > 20:
+        break
+      if useNames == True:
+         print names[w], mydict[w]
+      else:
+         print w, mydict[w]
 
 def main():
   '''
@@ -144,10 +140,11 @@ def main():
        p = subprocess.Popen(['./pr_phi', str(numNodes), str(numEdges), str(numIterations)], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
        
        for node in nodes:
-          print "Node: " + str(node)
-          if out_degrees.get(node) is not None: print str(out_degrees[node])
-          if out_degrees.get(node) is None: print "None"
+          #print "Node: " + str(node)
+          #if out_degrees.get(node) is not None: print str(out_degrees[node])
+          #if out_degrees.get(node) is None: print "None"
           if in_degrees.get(node) is not None:
+             #print "in-degrees: " + str(len(in_degrees[node]))
              for i in range (0, len(in_degrees[node])):
                 p.stdin.write('%d %d\n' % (int(node), int(in_degrees[node][i])))
              
@@ -168,7 +165,11 @@ def main():
        '''
     
     # Sets up page rank structures
+    
     pagerank.set_up(nodes, out_degrees, in_degrees)
+    
+    if file_name == 'wiki-Vote.txt':
+        parse_menu = '1'
 
     # PAGE RANKING
     print('Page Ranking...')
@@ -179,6 +180,7 @@ def main():
     # Statistics
     print('Page Rank Time: ' + str(end-start) + ' seconds')
     print('Page Rank Iterations: ' + str(num_iters))
+    
     
   
   # Wrong input

@@ -10,23 +10,20 @@
 #include <assert.h>
 #include <sys/time.h>
 
-#define ALIGN 64
-
 int *allocateMemory(int length) {
 
    int *vec;
 
-   if ((vec = (int *)_mm_malloc(length * sizeof(int), ALIGN)) == NULL) {
+   if ((vec = (int *)mm_malloc(length, sizeof(int))) == NULL) {
       fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
       exit(1);
    }
-   memset(vec, 0, length * sizeof(int));
    return vec;
 }
 
 // Reads input file into a vector
-void *readInput(int nodes, int edges, int*restrict *restrict indegree_count, int*restrict *restrict outdegree_count,
-   int*restrict *restrict running_edge_indices, int** edges_1d) {
+void *readInput(int nodes, int edges, int** indegree_count, int** outdegree_count,
+   int** running_edge_indices, int** edges_1d) {
    int in,out;
    int edges_read=0;
    int current_in=-1;
@@ -63,25 +60,22 @@ int main (int argc, char **argv) {
    int* restrict indegree_count=allocateMemory(nodes);
    int* restrict outdegree_count=allocateMemory(nodes);
    int* restrict running_edge_indices=allocateMemory(nodes + 1);
-   int* edges_1D = allocateMemory(edges);//node1:node2|node2->node1
+   int* restrict edges_1D = allocateMemory(edges);//node1:node2|node2->node1
 
    double* restrict pagerank_new;
    double* restrict pagerank_old;
    double jumpChance = (1 - d) * (1.0 / nodes);
-   //double* restrict temp;
+   //double *temp;
 
-   if ((pagerank_new = (double *)_mm_malloc(nodes * sizeof(double), ALIGN)) == NULL) {
+   if ((pagerank_new = (double *)mm_malloc(nodes, sizeof(double))) == NULL) {
       fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
       exit(1);
    }
 
-   if ((pagerank_old = (double *)_mm_malloc(nodes * sizeof(double), ALIGN)) == NULL) {
+   if ((pagerank_old = (double *)mm_malloc(nodes, sizeof(double))) == NULL) {
       fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
       exit(1);
    }
-
-   memset(pagerank_new, 0, nodes * sizeof(double));
-   memset(pagerank_old, 0, nodes * sizeof(double));
 
    for (i = 0; i < nodes; i++)
       pagerank_old[i] = 1 / (double)nodes;
@@ -117,11 +111,11 @@ int main (int argc, char **argv) {
    for (i = 0; i < nodes; i++)
       printf("%.15lf:%d,", pagerank_old[i], i);
 
-   _mm_free(indegree_count);
-   _mm_free(outdegree_count);
-   _mm_free(pagerank_new);
-   _mm_free(pagerank_old);
-   _mm_free(running_edge_indices);
-   _mm_free(edges_1D);
+   free(indegree_count);
+   free(outdegree_count);
+   free(pagerank_new);
+   free(pagerank_old);
+   free(running_edge_indices);
+   free(edges_1D);
    return 0;
 }
