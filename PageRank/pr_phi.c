@@ -32,6 +32,8 @@ void *readInput(int nodes, int edges, int*restrict *restrict indegree_count, int
    int edges_read=0;
    int current_in=-1;
 
+   fprintf(stderr, "%d\n", setvbuf(stdin, NULL, _IOFBF, edges * 2));
+
    while(edges_read < edges) {
       scanf("%d %d",&in,&out);
       (*indegree_count)[in]++;
@@ -68,6 +70,9 @@ int main (int argc, char **argv) {
 
    gettimeofday(&start, NULL);
    readInput(nodes, edges, &indegree_count, &outdegree_count, &running_edge_indices, &edges_1D);
+   gettimeofday(&stop, NULL);
+   fprintf(stderr, "took %lf seconds\n", (stop.tv_sec - start.tv_sec) +
+      ((stop.tv_usec - start.tv_usec) / 1000000.0));
 
    #pragma offload_transfer target(mic:0) in(edges_1D[0:edges]) signal(edges_1D)
 
