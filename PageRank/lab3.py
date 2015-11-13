@@ -118,14 +118,6 @@ def main():
       end = time.time()
       print('Parse/Graph Set-up Time: ' + str(end-start) + 'seconds')
     
-    '''
-    for node in nodes:
-      for i in range (0, len(in_degrees[node])):
-        print str(node) + " " + str(in_degrees[node][i])
-    
-    for node in nodes:
-      print str(out_degrees[node])
-    '''
     if file_name.rfind('/') != '-1':
        file_name = file_name[file_name.rfind('/') + 1:len(file_name)]
 
@@ -140,11 +132,7 @@ def main():
        p = subprocess.Popen(['./pr_phi', str(numNodes), str(numEdges), str(numIterations)], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
        
        for node in nodes:
-          #print "Node: " + str(node)
-          #if out_degrees.get(node) is not None: print str(out_degrees[node])
-          #if out_degrees.get(node) is None: print "None"
           if in_degrees.get(node) is not None:
-             #print "in-degrees: " + str(len(in_degrees[node]))
              for i in range (0, len(in_degrees[node])):
                 p.stdin.write('%d %d\n' % (int(node), int(in_degrees[node][i])))
              
@@ -180,8 +168,6 @@ def main():
     # Statistics
     print('Page Rank Time: ' + str(end-start) + ' seconds')
     print('Page Rank Iterations: ' + str(num_iters))
-    
-    
   
   # Wrong input
   else:

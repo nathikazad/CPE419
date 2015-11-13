@@ -9,6 +9,7 @@
 #include <string.h>
 #include <assert.h>
 #include <sys/time.h>
+#include <malloc.h>
 
 #define ALIGN 64
 
@@ -16,7 +17,7 @@ int *allocateMemory(int length) {
 
    int *vec;
 
-   if ((vec = (int *)_mm_malloc(length * sizeof(int), ALIGN)) == NULL) {
+   if ((vec = (int *)memalign(ALIGN, length * sizeof(int))) == NULL) {
       fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
       exit(1);
    }
@@ -65,40 +66,42 @@ int main (int argc, char **argv) {
    int* restrict running_edge_indices=allocateMemory(nodes + 1);
    int* edges_1D = allocateMemory(edges);//node1:node2|node2->node1
 
+   gettimeofday(&start, NULL);
+   readInput(nodes, edges, &indegree_count, &outdegree_count, &running_edge_indices, &edges_1D);
+
+   #pragma offload_transfer target(mic:0) in(edges_1D[0:edges]) signal(edges_1D)
+
    double* restrict pagerank_new;
    double* restrict pagerank_old;
    double jumpChance = (1 - d) * (1.0 / nodes);
-   //double* restrict temp;
 
-   if ((pagerank_new = (double *)_mm_malloc(nodes * sizeof(double), ALIGN)) == NULL) {
+   if ((pagerank_new = (double *)memalign(ALIGN, nodes * sizeof(double))) == NULL) {
       fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
       exit(1);
    }
 
-   if ((pagerank_old = (double *)_mm_malloc(nodes * sizeof(double), ALIGN)) == NULL) {
+   if ((pagerank_old = (double *)memalign(ALIGN, nodes * sizeof(double))) == NULL) {
       fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
       exit(1);
    }
-
-   memset(pagerank_new, 0, nodes * sizeof(double));
-   memset(pagerank_old, 0, nodes * sizeof(double));
 
    for (i = 0; i < nodes; i++)
       pagerank_old[i] = 1 / (double)nodes;
 
-   gettimeofday(&start, NULL);
-   readInput(nodes, edges, &indegree_count, &outdegree_count, &running_edge_indices, &edges_1D);
+   memset(pagerank_new, 0, nodes * sizeof(double));
 
-#pragma offload target(mic:0) in (i, j, k) in(indegree_count:length(nodes)) \
+#pragma offload target(mic:0) in(i, j, k) in(indegree_count:length(nodes)) \
    in(outdegree_count:length(nodes)) in(running_edge_indices:length(nodes)) \
-   in(edges_1D:length(edges)) inout(pagerank_old:length(nodes)) in(pagerank_new:length(nodes))
+   inout(pagerank_old:length(nodes)) in(pagerank_new:length(nodes)) in(edges_1D:length(edges)) \
+   wait(edges_1D) 
    {
    double* restrict temp;
    for (i = 0; i < iter; i++) {
-      #pragma omp parallel for
+      #pragma omp parallel for schedule(static)
       for (j = 0; j < nodes; j++) {
          double sum = 0;
          int stopIdx = running_edge_indices[j] + indegree_count[j];
+         #pragma omp parallel for
          for (k = running_edge_indices[j]; k < stopIdx; k++) {
             int jk = edges_1D[k];
             sum += pagerank_old[jk] / outdegree_count[jk];
@@ -117,11 +120,11 @@ int main (int argc, char **argv) {
    for (i = 0; i < nodes; i++)
       printf("%.15lf:%d,", pagerank_old[i], i);
 
-   _mm_free(indegree_count);
-   _mm_free(outdegree_count);
-   _mm_free(pagerank_new);
-   _mm_free(pagerank_old);
-   _mm_free(running_edge_indices);
-   _mm_free(edges_1D);
+   free(indegree_count);
+   free(outdegree_count);
+   free(pagerank_new);
+   free(pagerank_old);
+   free(running_edge_indices);
+   free(edges_1D);
    return 0;
 }

@@ -5,7 +5,6 @@ ICC = icc
 CFLAGS = -O2 -openmp -g -restrict -debug inline-debug-info
 
 make: pr_phi
-#make: pr_cuda
 
 pr_phi: pr_phi.o
 	$(ICC) $(CFLAGS) -o pr_phi pr_phi.o
@@ -17,5 +16,5 @@ pr_cuda: pr_cuda.cu
 	nvcc $(NVFLAGS) -o mm_cuda pr_cuda.cu
 
 clean: 
-	rm -f *.o pr_phi pr_cuda 
+	rm -f *.o pr_phi pr_cuda pr_native
 
