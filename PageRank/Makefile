@@ -11,10 +11,16 @@ pr_phi: pr_phi.o
 	
 pr_phi.o: pr_phi.c
 	$(ICC) $(CFLAGS) -c pr_phi.c
+	
+test: test.o
+	$(ICC) $(CFLAGS) -o pr_test test.o
+
+test.o: test.c
+	$(ICC) $(CFLAGS) -c test.c
 
 pr_cuda: pr_cuda.cu
 	nvcc $(NVFLAGS) -o mm_cuda pr_cuda.cu
 
 clean: 
-	rm -f *.o pr_phi pr_cuda pr_native
+	rm -f *.o pr_phi pr_test
 

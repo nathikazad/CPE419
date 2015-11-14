@@ -123,19 +123,23 @@ def main():
 
     (numIterations, numNodes, numEdges) = fileSpecs[file_name]
     print numIterations, numNodes, numEdges
-    print out_degrees.get(12028)
     
     '''
     Call C Program
     '''
     
     if version == 'x' or version == 'b':
-       p = subprocess.Popen(['./pr_phi', str(numNodes), str(numEdges), str(numIterations)], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+       p = subprocess.Popen(['./pr_test', str(numNodes), str(numEdges), str(numIterations)], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
        
        for node in nodes:
           if in_degrees.get(node) is not None:
              for i in range (0, len(in_degrees[node])):
-                p.stdin.write('%d %d\n' % (int(node), int(in_degrees[node][i])))
+                p.stdin.write('%d\n' % int(in_degrees[node][i]))
+    
+       for node in nodes:
+           i = len(in_degrees[node]) if in_degrees.get(node) is not None else 0
+           j = out_degrees[node] if out_degrees.get(node) is not None else 0
+           p.stdin.write("%d %d %d\n" % (int(node), int(i), int(j)))
              
        output = p.communicate()[0]
        output = output[:-1]
@@ -166,10 +170,12 @@ def main():
     num_iters = pagerank.page_rank(0, names, parse_menu)  # Stores # of page rank iterations
     end = time.time()
     
+    
     # Statistics
     print('Page Rank Time: ' + str(end-start) + ' seconds')
     print('Page Rank Iterations: ' + str(num_iters))
     '''
+  
   # Wrong input
   else:
     print('Invalid input - exiting')

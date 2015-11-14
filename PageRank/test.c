@@ -25,37 +25,13 @@ int *allocateMemory(int length) {
    return vec;
 }
 
-// Reads input file into a vector
-void *readInput(int nodes, int edges, int*restrict *restrict indegree_count, int*restrict *restrict outdegree_count,
-   int*restrict *restrict running_edge_indices, int** edges_1d) {
-   int in,out;
-   int edges_read=0;
-   int current_in=-1;
-
-   fprintf(stderr, "%d\n", setvbuf(stdin, NULL, _IOFBF, edges * 2));
-
-   while(edges_read < edges) {
-      scanf("%d %d",&in,&out);
-      (*indegree_count)[out]++;
-      (*outdegree_count)[in]++;
-      if(in!=current_in)
-      {
-         (*running_edge_indices)[in]=edges_read;
-         current_in=in;
-      }
-      (*edges_1d)[edges_read]=out;
-      edges_read++;
-   }
-   (*running_edge_indices)[nodes] = edges;
-}
-
 int main (int argc, char **argv) {
 
    if(argc!=4) {
       printf("Invalid Syntax <Nodecount> <Edgecount> <Itercount>\n");
       return 0;
    }
-   int i = 0, j = 0, k = 0;
+   int i = 0, j = 0, k = 0, run = 0, idx = 0;
    int nodes=atoi(argv[1]);
    int edges=atoi(argv[2]);
    int iter = atoi(argv[3]);
@@ -69,12 +45,33 @@ int main (int argc, char **argv) {
    int* edges_1D = allocateMemory(edges);//node1:node2|node2->node1
 
    gettimeofday(&start, NULL);
-   readInput(nodes, edges, &indegree_count, &outdegree_count, &running_edge_indices, &edges_1D);
+
+   fprintf(stderr, "%d\n", setvbuf(stdin, NULL, _IOFBF, edges));
+
+   //reads in edges
+   for (i = 0; i < edges; i++) {
+      scanf("%d\n", &j);
+      edges_1D[i] = j;
+   }
+
+   #pragma offload_transfer target(mic:0) in(edges_1D[0:edges]) signal(edges_1D)
+
    gettimeofday(&stop, NULL);
    fprintf(stderr, "took %lf seconds\n", (stop.tv_sec - start.tv_sec) +
       ((stop.tv_usec - start.tv_usec) / 1000000.0));
 
-   #pragma offload_transfer target(mic:0) in(edges_1D[0:edges]) signal(edges_1D)
+   //reads in in-degrees, out-degrees, and computes running idx
+   for (i = 0; i < nodes; i++) {
+      scanf("%d %d %d\n", &idx, &j, &k);
+      indegree_count[idx] = j;
+      outdegree_count[idx] = k;
+      running_edge_indices[idx] = run;
+      run += j;
+   }
+
+   gettimeofday(&stop, NULL);
+   fprintf(stderr, "took %lf seconds\n", (stop.tv_sec - start.tv_sec) +
+      ((stop.tv_usec - start.tv_usec) / 1000000.0));
 
    double* restrict pagerank_new;
    double* restrict pagerank_old;
@@ -95,10 +92,9 @@ int main (int argc, char **argv) {
 
    memset(pagerank_new, 0, nodes * sizeof(double));
 
-#pragma offload target(mic:0) in(i, j, k) in(indegree_count:length(nodes)) \
+#pragma offload target(mic:0) wait(edges_1D) in(i, j, k) in(indegree_count:length(nodes)) \
    in(outdegree_count:length(nodes)) in(running_edge_indices:length(nodes)) \
-   inout(pagerank_old:length(nodes)) in(pagerank_new:length(nodes)) in(edges_1D:length(edges)) \
-   wait(edges_1D) 
+   inout(pagerank_old:length(nodes)) in(pagerank_new:length(nodes)) in(edges_1D:length(edges))
    {
    double* restrict temp;
    for (i = 0; i < iter; i++) {
@@ -107,12 +103,9 @@ int main (int argc, char **argv) {
          double sum = 0;
          int stopIdx = running_edge_indices[j] + indegree_count[j];
          #pragma omp parallel for
-         //fprintf(stderr, "j: %d stopIdx: %d ", j, stopIdx);
          for (k = running_edge_indices[j]; k < stopIdx; k++) {
             int jk = edges_1D[k];
             sum += pagerank_old[jk] / outdegree_count[jk];
-            //fprintf(stderr, "jk: %d od: %d ", jk, outdegree_count[jk]);
-            //fprintf(stderr, "sum: %lf\n", sum);
          }
          pagerank_new[j] = sum * d + jumpChance;
       }
@@ -125,10 +118,8 @@ int main (int argc, char **argv) {
    fprintf(stderr, "took %lf seconds\n", (stop.tv_sec - start.tv_sec) +
       ((stop.tv_usec - start.tv_usec) / 1000000.0));
 
-   for (i = 0; i < nodes; i++) {
+   for (i = 0; i < nodes; i++)
       printf("%.15lf:%d,", pagerank_old[i], i);
-      //fprintf(stderr, "%.15lf:%d\n", pagerank_old[i], i);
-   }
 
    free(indegree_count);
    free(outdegree_count);
