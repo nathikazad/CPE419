@@ -41,6 +41,8 @@ __global__ void CalcPageRank(int nodes, int edges, int *in_d, int *out_d,
       int *run_d, int *edges_d, double *pagerank_old_d, double *pagerank_new_d)
 {
    int node_index = blockIdx.x * BLOCKWIDTH + threadIdx.x;
+   if(node_index<nodes)
+   {
    double sum = 0;
    double d = 0.85;
    double jumpChance = (1 - d) * (1.0 / nodes);
@@ -53,6 +55,7 @@ __global__ void CalcPageRank(int nodes, int edges, int *in_d, int *out_d,
    }
    
    pagerank_new_d[node_index] = sum * d + jumpChance;
+   }
    __syncthreads();
    pagerank_old_d[node_index] = pagerank_new_d[node_index];
 }
@@ -169,8 +172,8 @@ int main (int argc, char **argv) {
 
 
    int blocks = ceil((double)nodes/(double)BLOCKWIDTH);
-   dim3 dimGrid(1, 1, 1);
-   dim3 dimBlock(38, 1, 1);
+   dim3 dimGrid(blocks, 1, 1);
+   dim3 dimBlock(BLOCKWIDTH, 1, 1);
    for(i=0; i < iter; i++)
    {
 	    CalcPageRank<<<dimGrid, dimBlock>>>(nodes, edges, in_d, out_d, run_d, edges_d, pagerank_old_d, pagerank_new_d);	    
