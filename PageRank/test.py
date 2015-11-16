@@ -79,17 +79,21 @@ def main():
 
   # Setting variable if '-w' is used
   if len(sys.argv) > 1:
-    if sys.argv[1] == '-w':
+    if '-w' in sys.argv:
       is_weighted = True
 
   # Menu
   print('CSC 466: Lab 3 - PageRank & Link Analysis')
-  parse_menu = raw_input('Parse:\n' +
-                         '1) csv\n' +
-                         '2) snap\n'
-                        )
-  file_name = raw_input('File name: ')
-  version = raw_input('Xeon Phi, Cuda or Both? (x/c/b): ')
+  parse_menu = '1'
+  file_name = sys.argv[1]
+  version = sys.argv[2]
+  if(file_name[-3:]=='csv'):
+    parse_menu = '1'
+  elif(file_name[-3:]=='txt'):
+    parse_menu = '2'
+  else:
+    print "Format not supported"
+    
   
   # PARSING - CSV Files
   # Note: The algorithm is the same, just parsing is different.
@@ -128,7 +132,7 @@ def main():
     Call C Program
     '''
     
-    if version == 'x' or version == 'b':
+    if version == 'phi' or version == 'both':
        p = subprocess.Popen(['./pr_test', str(numNodes), str(numEdges), str(numIterations)], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
        
        for node in nodes:
@@ -144,21 +148,36 @@ def main():
        output = p.communicate()[0]
        output = output[:-1]
        p.stdin.close()
-       
        useNames = parse_menu == '1' or file_name == "wiki-Vote.txt"
        print str(useNames)
        printPageRankValues(output, useNames, names)
 
-    if version == 'c' or version == 'b':
-       p = subprocess.Popen(cuda_command, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-       '''
+    if version == 'cuda' or version == 'both':
+        p = subprocess.Popen(['./pr_cuda', str(numNodes), str(numEdges), str(numIterations)], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+        for node in nodes:
+           if in_degrees.get(node) is not None:
+              for i in range (0, len(in_degrees[node])):
+                 p.stdin.write('%d\n' % int(in_degrees[node][i]))
+     
+        for node in nodes:
+            i = len(in_degrees[node]) if in_degrees.get(node) is not None else 0
+            j = out_degrees[node] if out_degrees.get(node) is not None else 0
+            p.stdin.write("%d %d %d\n" % (int(node), int(i), int(j)))
+              
+        output = p.communicate()[0]
+        output = output[:-1]
+        p.stdin.close()
+        useNames = parse_menu == '1' or file_name == "wiki-Vote.txt"
+        print str(useNames)
+        printPageRankValues(output, useNames, names)
+    '''
        for node in nodes:
           for i in range (0, len(in_degress[node])):
              p.stdin.write('%d %d\n' % (int(node), int(in_degrees[node][i])))
-       '''
+
     
     # Sets up page rank structures
-    '''
+
     pagerank.set_up(nodes, out_degrees, in_degrees)
     
     if file_name == 'wiki-Vote.txt':
