@@ -127,7 +127,7 @@ int main (int argc, char **argv) {
    int blocks = ceil((double)nodes/(double)BLOCKWIDTH);
    dim3 dimGrid(blocks, 1);
    dim3 dimBlock(BLOCKWIDTH, 1);
-   for(i=0; i < nodes; i++)
+   for(i=0; i < iter; i++)
    {
       CalcPageRank<<<dimGrid, dimBlock>>>(nodes, edges, in_d, out_d, run_d, edges_d, 
          pagerank_old_d, pagerank_new_d);
