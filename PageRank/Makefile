@@ -19,7 +19,7 @@ test.o: test.c
 	$(ICC) $(CFLAGS) -c test.c
 
 pr_cuda: pr_cuda.cu
-	nvcc $(NVFLAGS) -o mm_cuda pr_cuda.cu
+	nvcc $(NVFLAGS) -o pr_cuda pr_cuda.cu
 
 clean: 
 	rm -f *.o pr_phi pr_test
