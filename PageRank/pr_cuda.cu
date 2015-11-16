@@ -11,8 +11,10 @@
 #include <sys/time.h>
 #include <malloc.h>
 #include <math.h>
+#include <cuda_runtime.h>
 
 #define BLOCKWIDTH 1024
+
 int *allocateMemoryInt(int length) {
 
    int *vec;
@@ -44,15 +46,15 @@ __global__ void CalcPageRank(int nodes, int edges, int *in_d, int *out_d,
    double jumpChance = (1 - d) * (1.0 / nodes);
    int stopIdx = run_d[node_index] + in_d[node_index];
    int k;
+   
    for (k = run_d[node_index]; k < stopIdx; k++) {
       int jk = edges_d[k];
       sum += pagerank_old_d[jk] / out_d[jk];
    }
+   
    pagerank_new_d[node_index] = sum * d + jumpChance;
    __syncthreads();
-//   printf("before %d %lf\n",node_index, pagerank_old_d[node_index]);
-   pagerank_old_d[node_index]=pagerank_new_d[node_index];
-//   printf("after %d %f\n",node_index, pagerank_old_d[node_index]);
+   pagerank_old_d[node_index] = pagerank_new_d[node_index];
 }
 
 int main (int argc, char **argv) {
@@ -69,7 +71,7 @@ int main (int argc, char **argv) {
 
    int*  indegree_count=allocateMemoryInt(nodes);
    int*  outdegree_count=allocateMemoryInt(nodes);
-   int*  running_edge_indices=allocateMemoryInt(nodes + 1);
+   int*  running_edge_indices=allocateMemoryInt(nodes);
    int*  edges_1D = allocateMemoryInt(edges);//node1:node2|node2->node1
 
    double*  pagerank_new;
@@ -85,6 +87,9 @@ int main (int argc, char **argv) {
       exit(1);
    }
 
+//   double*  pagerank_new=allocateMemoryDouble(nodes);
+//   double*  pagerank_old=allocateMemoryDouble(nodes);   
+
    for (i = 0; i < nodes; i++)
    {
 	   pagerank_old[i] = 1.0 / (double)nodes;
@@ -99,6 +104,7 @@ int main (int argc, char **argv) {
    
    gettimeofday(&start, NULL);
    fprintf(stderr, "%d\n", setvbuf(stdin, NULL, _IOFBF, edges));
+   setvbuf(stdin, NULL, _IOFBF, edges);
 
    //reads in edges
    for (i = 0; i < edges; i++) {
@@ -122,6 +128,7 @@ int main (int argc, char **argv) {
    fprintf(stderr, "took %lf seconds\n", (stop.tv_sec - start.tv_sec) +
       ((stop.tv_usec - start.tv_usec) / 1000000.0));
 
+
    // Begin Cuda Setup
    int *in_d, *out_d, *run_d, *edges_d;
    double *pagerank_new_d, *pagerank_old_d;
@@ -137,19 +144,44 @@ int main (int argc, char **argv) {
    cudaMemcpy(pagerank_old_d, pagerank_old, nodes * sizeof(double), cudaMemcpyHostToDevice);
    cudaMalloc(&pagerank_new_d,nodes * sizeof(double));
    cudaMemcpy(pagerank_new_d, pagerank_new, nodes * sizeof(double), cudaMemcpyHostToDevice);
+   
+//   int node_size = nodes * sizeof(int);
+//   int pr_size = nodes * sizeof(double);
+//   int edges_size = edges * sizeof(int);
+//   
+//   cudaMalloc(&in_d, node_size);
+//   cudaMemcpy(in_d, indegree_count, node_size, cudaMemcpyHostToDevice);
+//   
+//   cudaMalloc(&out_d, node_size);
+//   cudaMemcpy(out_d, outdegree_count, node_size, cudaMemcpyHostToDevice);
+//   
+//   cudaMalloc(&run_d, node_size);
+//   cudaMemcpy(run_d, running_edge_indices, node_size, cudaMemcpyHostToDevice);
+//   
+//   cudaMalloc(&edges_d, edges_size);
+//   cudaMemcpy(edges_d, edges_1D, edges_size, cudaMemcpyHostToDevice);
+//   
+//   cudaMalloc(&pagerank_old_d,pr_size);
+//   cudaMemcpy(pagerank_old_d, pagerank_old, pr_size, cudaMemcpyHostToDevice);
+//   
+//   cudaMalloc(&pagerank_new_d,pr_size);
+//   cudaMemcpy(pagerank_new_d, pagerank_new, pr_size, cudaMemcpyHostToDevice);
+
+
    int blocks = ceil((double)nodes/(double)BLOCKWIDTH);
    dim3 dimGrid(1, 1, 1);
    dim3 dimBlock(38, 1, 1);
-   printf("%lf  \n", pagerank_old[0]);
    for(i=0; i < iter; i++)
    {
 	    CalcPageRank<<<dimGrid, dimBlock>>>(nodes, edges, in_d, out_d, run_d, edges_d, pagerank_old_d, pagerank_new_d);	    
    }
 
+
    cudaMemcpy(pagerank_old, pagerank_old_d, nodes * sizeof(double), cudaMemcpyDeviceToHost);
    gettimeofday(&stop, NULL);
    fprintf(stderr, "took %lf seconds\n", (stop.tv_sec - start.tv_sec) +
       ((stop.tv_usec - start.tv_usec) / 1000000.0));
+   
 
    cudaFree(in_d);
    cudaFree(out_d);

@@ -135,6 +135,7 @@ def main():
     if version == 'phi' or version == 'both':
        p = subprocess.Popen(['./pr_test', str(numNodes), str(numEdges), str(numIterations)], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
        
+       start = time.time()   
        for node in nodes:
           if in_degrees.get(node) is not None:
              for i in range (0, len(in_degrees[node])):
@@ -144,12 +145,11 @@ def main():
            i = len(in_degrees[node]) if in_degrees.get(node) is not None else 0
            j = out_degrees[node] if out_degrees.get(node) is not None else 0
            p.stdin.write("%d %d %d\n" % (int(node), int(i), int(j)))
-             
+       
        output = p.communicate()[0]
        output = output[:-1]
        p.stdin.close()
        useNames = parse_menu == '1' or file_name == "wiki-Vote.txt"
-       print str(useNames)
        printPageRankValues(output, useNames, names)
 
     if version == 'cuda' or version == 'both':
@@ -170,30 +170,7 @@ def main():
         useNames = parse_menu == '1' or file_name == "wiki-Vote.txt"
         print str(useNames)
         printPageRankValues(output, useNames, names)
-    '''
-       for node in nodes:
-          for i in range (0, len(in_degress[node])):
-             p.stdin.write('%d %d\n' % (int(node), int(in_degrees[node][i])))
-
-    
-    # Sets up page rank structures
-
-    pagerank.set_up(nodes, out_degrees, in_degrees)
-    
-    if file_name == 'wiki-Vote.txt':
-        parse_menu = '1'
-
-    # PAGE RANKING
-    print('Page Ranking...')
-    start = time.time()
-    num_iters = pagerank.page_rank(0, names, parse_menu)  # Stores # of page rank iterations
-    end = time.time()
-    
-    
-    # Statistics
-    print('Page Rank Time: ' + str(end-start) + ' seconds')
-    print('Page Rank Iterations: ' + str(num_iters))
-    '''
+   
   
   # Wrong input
   else:
