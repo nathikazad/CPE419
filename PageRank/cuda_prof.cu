@@ -26,26 +26,31 @@ int *allocateMemoryInt(int length) {
    memset(vec, 0, length * sizeof(int));
    return vec;
 }
+double *allocateMemoryDouble(int length) {
 
+   double *vec;
 
-// CUDA Kernal Call
+   if ((vec = (double *)malloc(length * sizeof(double))) == NULL) {
+      fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
+      exit(1);
+   }
+   return vec;
+}
+
 __global__ void CalcPageRank(int nodes, int edges, int *in_d, int *out_d, 
       int *run_d, int *edges_d, double *pagerank_old_d, double *pagerank_new_d) {
    
    int node_index = blockIdx.x * BLOCKWIDTH + threadIdx.x; 
 
-   if(node_index < nodes) {
-
+   if(node_index<nodes) {
       double sum = 0;
       double d = 0.85;
       double jumpChance = (1 - d) * (1.0 / nodes);
-      int k;
-
-      //move along edges array for each node pointing at the current node
       int stopIdx = run_d[node_index] + in_d[node_index];
+      int k;
       
       for (k = run_d[node_index]; k < stopIdx; k++) {
-         int jk = edges_d[k];   // get a node pointing at the current node
+         int jk = edges_d[k];
          sum += pagerank_old_d[jk] / out_d[jk];
       }  
    
@@ -55,16 +60,12 @@ __global__ void CalcPageRank(int nodes, int edges, int *in_d, int *out_d,
    pagerank_old_d[node_index] = pagerank_new_d[node_index];
 }
 
-int main (int argc, char **argv) {
+int main () {
 
-   if(argc!=4) {
-      printf("Invalid Syntax <Nodecount> <Edgecount> <Itercount>\n");
-      return 0;
-   }
    int i = 0, j = 0, k = 0, run = 0, idx = 0;
-   int nodes=atoi(argv[1]);
-   int edges=atoi(argv[2]);
-   int iter = atoi(argv[3]);
+   int nodes = 38;
+   int edges = 156;
+   int iter = 38;
    struct timeval stop, start;
 
    int* indegree_count=allocateMemoryInt(nodes);
@@ -84,6 +85,10 @@ int main (int argc, char **argv) {
       fprintf(stderr, "MALLOC ERROR: %s\n", strerror(errno));
       exit(1);
    }
+
+   for (i = 0; i < nodes; i++) {
+	   pagerank_old[i] = 1.0 / (double)nodes;
+   }
    
    memset(pagerank_new, 0, nodes * sizeof(double));
    
@@ -94,13 +99,13 @@ int main (int argc, char **argv) {
    gettimeofday(&start, NULL);
    setvbuf(stdin, NULL, _IOFBF, edges);
 
-   //reads in edges (the nodes that point to other nodes)
+   //reads in edges
    for (i = 0; i < edges; i++) {
       scanf("%d\n", &j);
       edges_1D[i] = j;
    }
 
-   //reads in in-degrees, out-degrees, and computes value for running idx array
+   //reads in in-degrees, out-degrees, and computes running idx
    for (i = 0; i < nodes; i++) {
       scanf("%d %d %d\n", &idx, &j, &k);
       indegree_count[idx] = j;
@@ -112,6 +117,7 @@ int main (int argc, char **argv) {
    gettimeofday(&stop, NULL);
    fprintf(stderr, "Read took %lf seconds\n", (stop.tv_sec - start.tv_sec) +
       ((stop.tv_usec - start.tv_usec) / 1000000.0));
+
 
    // Begin Cuda Setup 
    int *in_d, *out_d, *run_d, *edges_d;
@@ -137,22 +143,20 @@ int main (int argc, char **argv) {
    cudaMemcpy(pagerank_old_d, pagerank_old, pr_size, cudaMemcpyHostToDevice);
    
    cudaMalloc(&pagerank_new_d,pr_size);
+   //cudaMemcpy(pagerank_new_d, pagerank_new, pr_size, cudaMemcpyHostToDevice);
 
-   // Computes number of blocks needed, creates a "row-like" grid with "row-like" blocks
    int blocks = ceil((double)nodes/(double)BLOCKWIDTH);
    dim3 dimGrid(blocks, 1, 1);
    dim3 dimBlock(BLOCKWIDTH, 1, 1);
 
-   gettimeofday(&start, NULL);
-
    for(i=0; i < iter; i++) {
-	   CalcPageRank<<<dimGrid, dimBlock>>>(nodes, edges, in_d, out_d, run_d, edges_d, pagerank_old_d, pagerank_new_d);	    
+	    CalcPageRank<<<dimGrid, dimBlock>>>(nodes, edges, in_d, out_d, run_d, edges_d, pagerank_old_d, pagerank_new_d);	    
    }
 
-   cudaMemcpy(pagerank_old, pagerank_old_d, nodes * sizeof(double), cudaMemcpyDeviceToHost);
 
+   cudaMemcpy(pagerank_old, pagerank_old_d, nodes * sizeof(double), cudaMemcpyDeviceToHost);
    gettimeofday(&stop, NULL);
-   fprintf(stderr, "Compute took %lf seconds\n\n", (stop.tv_sec - start.tv_sec) +
+   fprintf(stderr, "Compute took %lf seconds\n", (stop.tv_sec - start.tv_sec) +
       ((stop.tv_usec - start.tv_usec) / 1000000.0));
 
    cudaFree(in_d);
@@ -162,9 +166,8 @@ int main (int argc, char **argv) {
    cudaFree(pagerank_old_d);
    cudaFree(pagerank_new_d);
 
-   // prints out all pagerank values and their respective nodes -> captured by python program
    for (i = 0; i < nodes; i++)
-      printf("%.15lf:%d,", pagerank_old[i], i);
+    printf("%.15lf:%d,", pagerank_old[i], i);
 
    free(indegree_count);
    free(outdegree_count);

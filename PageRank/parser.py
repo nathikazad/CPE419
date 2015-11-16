@@ -1,12 +1,13 @@
 '''
-Lab 3 - Page Rank
+Project 4 - Parallel Page Rank
 
 File: parser.py
 Description:
-  Parser module to parse csv and SNAP files.
+  Parser module to parse csv and SNAP files, generate string-to-int maps if needed
 
-Mandy Chan
-Garrett Summers
+original version: Mandy Chan, Garrett Summers
+
+modified by: Eric Dazet, Nathik Salam
 '''
 
 import csv
@@ -17,8 +18,7 @@ in_degrees = {}         # Dictionary of in-degrees. Key: Node ID, Value: List of
                         #   nodes pointing to it (strings)
 out_degrees = {}        # Dictionary of out-degrees. Key: Node ID, Value: Int
                         #   representing the number of nodes it points to.
-names = {}		# Dictionary of names. Key: String, Value: Corresponding 
-			#   Number
+names = {}		         # Dictionary for data mapping. Key: Data, Value: Corresponding map value
 
 def parse_snap(file):
   '''
@@ -28,7 +28,7 @@ def parse_snap(file):
   Node1 is always pointing to Node2. Therefore, Node2 gets an in-degree added to
   it while Node1 increments the number of out-degrees it has.
   
-  Returns a tuple (list, dictionary [of ints], dictionary [of list of strings])
+  Returns a tuple (list, dictionary [of ints], dictionary [of list of strings], data mapping if needed)
   '''
   global nodes, in_degrees, out_degrees, names
   
@@ -36,6 +36,13 @@ def parse_snap(file):
   if file.rfind('/') != '-1':
        file_name = file[file.rfind('/') + 1:len(file)]
   
+  '''
+  all the snap files except wiki-Vote.txt are in sorted order initially
+
+  we mapped the data from wiki-Vote.txt to be ordered and then referred to the map with
+  the final results to get the proper values
+  '''
+
   nameCheck = file_name == "wiki-Vote.txt"
   map = 0
 
@@ -43,8 +50,6 @@ def parse_snap(file):
     for i, line in enumerate(f):
       if line[0] == '#':
         continue
-      #if i % 1000 == 0:
-        #print i
       words = line.split()
       n_one = words[0]
       n_two = words[1]
@@ -72,7 +77,9 @@ def parse_snap(file):
       out_degrees[n_one] = out_degrees.get(n_one, 0) + 1
       in_degrees[n_two].append(n_one)
       
+  # flips names dictionary so map values become keys
   names = dict((v, k) for k, v in names.iteritems())
+
   return (sorted(nodes, key=int), out_degrees, in_degrees, names)
 
 def parse_weighted_csv(file):
@@ -84,6 +91,13 @@ def parse_weighted_csv(file):
   vice versa for N2-val > N1-val)
   '''
   global nodes, in_degrees, out_degrees, names
+
+  '''
+  most of the smaller CSV files had strings that we decided to map to integers
+
+  we mapped the data from all CSV files and then referred to the map with
+  the final results to get the proper values
+  '''
 
   map = 0
 
@@ -111,6 +125,7 @@ def parse_weighted_csv(file):
       nodes.add(n_two)
       val_one = int(row['N1-val'].strip())
       val_two = int(row['N2-val'].strip())
+
       if val_one < val_two:
         out_degrees[n_one] = out_degrees.get(n_one, 0) + 1
         
@@ -124,7 +139,9 @@ def parse_weighted_csv(file):
           in_degrees[n_one] = []
         (in_degrees.get(n_one, [])).append(n_two)
       
+  # flips names dictionary so map values become keys
   names = dict((v, k) for k, v in names.iteritems())
+
   return (sorted(nodes), out_degrees, in_degrees, names)
 
 def parse_csv(file):
@@ -136,7 +153,7 @@ def parse_csv(file):
   Node1 is always pointing to Node2. Therefore, Node2 gets an in-degree added to
   it while Node1 increments the number of out-degrees it has.
   
-  Returns a tuple (list, dictionary [of ints], dictionary [of list of strings])
+  Returns a tuple (list, dictionary [of ints], dictionary [of list of strings], data mapping)
   '''
 
   global nodes, in_degrees, out_degrees, names
@@ -175,13 +192,10 @@ def parse_csv(file):
       # Add 'N1' to N2's list of in-degrees
       (in_degrees.get(n_two, [])).append(n_one)
 
+  # flips names dictionary so map values become keys
   names = dict((v, k) for k, v in names.iteritems())
-  return (sorted(nodes), out_degrees, in_degrees, names)
 
-#def main():
-  # Testing Purposes
-  #parse_snap(sys.argv[1])
-  #parse_csv(sys.argv[1])
+  return (sorted(nodes), out_degrees, in_degrees, names)
 
 if __name__ == '__main__':
   main()

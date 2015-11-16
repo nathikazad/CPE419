@@ -31,9 +31,7 @@ int main (int argc, char **argv) {
       printf("Invalid Syntax <Nodecount> <Edgecount> <Itercount>\n");
       return 0;
    }
-
    int i = 0, j = 0, k = 0, run = 0, idx = 0;
-
    int nodes=atoi(argv[1]);
    int edges=atoi(argv[2]);
    int iter = atoi(argv[3]);
@@ -50,16 +48,15 @@ int main (int argc, char **argv) {
 
    setvbuf(stdin, NULL, _IOFBF, edges);
 
-   //reads in edges (the nodes that point to other nodes)
+   //reads in edges
    for (i = 0; i < edges; i++) {
       scanf("%d\n", &j);
       edges_1D[i] = j;
    }
 
-   //sends edges array asynchronously to phi
    #pragma offload_transfer target(mic:0) in(edges_1D[0:edges]) signal(edges_1D)
 
-   //reads in in-degrees, out-degrees, and computes value for running idx array
+   //reads in in-degrees, out-degrees, and computes running idx
    for (i = 0; i < nodes; i++) {
       scanf("%d %d %d\n", &idx, &j, &k);
       indegree_count[idx] = j;
@@ -86,7 +83,6 @@ int main (int argc, char **argv) {
       exit(1);
    }
 
-   // initialize all pagerank values to 1 / number of nodes
    for (i = 0; i < nodes; i++)
       pagerank_old[i] = 1 / (double)nodes;
 
@@ -99,18 +95,14 @@ int main (int argc, char **argv) {
    inout(pagerank_old:length(nodes)) in(pagerank_new:length(nodes)) in(edges_1D:length(edges))
    {
    double* restrict temp;
-
    for (i = 0; i < iter; i++) {
       #pragma omp parallel for schedule(static)
       for (j = 0; j < nodes; j++) {
          double sum = 0;
-
-         //move along edges array for each node pointing at the current node
          int stopIdx = running_edge_indices[j] + indegree_count[j];
-
          #pragma omp parallel for
          for (k = running_edge_indices[j]; k < stopIdx; k++) {
-            int jk = edges_1D[k];   // get a node pointing at the current node
+            int jk = edges_1D[k];
             sum += pagerank_old[jk] / outdegree_count[jk];
          }
          pagerank_new[j] = sum * d + jumpChance;
@@ -121,10 +113,9 @@ int main (int argc, char **argv) {
    }
    }
    gettimeofday(&stop, NULL);
-   fprintf(stderr, "Compute took %lf seconds\n\n", (stop.tv_sec - start.tv_sec) +
+   fprintf(stderr, "Compute took %lf seconds\n", (stop.tv_sec - start.tv_sec) +
       ((stop.tv_usec - start.tv_usec) / 1000000.0));
 
-   // prints out all pagerank values and their respective nodes -> captured by python program
    for (i = 0; i < nodes; i++)
       printf("%.15lf:%d,", pagerank_old[i], i);
 
