@@ -131,6 +131,7 @@ def main():
     if version == 'x' or version == 'b':
        p = subprocess.Popen(['./pr_test', str(numNodes), str(numEdges), str(numIterations)], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
        
+       start = time.time()   
        for node in nodes:
           if in_degrees.get(node) is not None:
              for i in range (0, len(in_degrees[node])):
@@ -140,23 +141,39 @@ def main():
            i = len(in_degrees[node]) if in_degrees.get(node) is not None else 0
            j = out_degrees[node] if out_degrees.get(node) is not None else 0
            p.stdin.write("%d %d %d\n" % (int(node), int(i), int(j)))
-             
+       
        output = p.communicate()[0]
        output = output[:-1]
        p.stdin.close()
        
        useNames = parse_menu == '1' or file_name == "wiki-Vote.txt"
-       print str(useNames)
        printPageRankValues(output, useNames, names)
-
+       end = time.time()
+       print('Transfer/Print Time: ' + str(end-start) + 'seconds')
+      
     if version == 'c' or version == 'b':
-       p = subprocess.Popen(cuda_command, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-       '''
+       p = subprocess.Popen(['./pr_cuda', str(numNodes), str(numEdges), str(numIterations)], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+       
+       start = time.time()   
        for node in nodes:
-          for i in range (0, len(in_degress[node])):
-             p.stdin.write('%d %d\n' % (int(node), int(in_degrees[node][i])))
-       '''
+          if in_degrees.get(node) is not None:
+             for i in range (0, len(in_degrees[node])):
+                p.stdin.write('%d\n' % int(in_degrees[node][i]))
     
+       for node in nodes:
+           i = len(in_degrees[node]) if in_degrees.get(node) is not None else 0
+           j = out_degrees[node] if out_degrees.get(node) is not None else 0
+           p.stdin.write("%d %d %d\n" % (int(node), int(i), int(j)))
+       
+       output = p.communicate()[0]
+       output = output[:-1]
+       p.stdin.close()
+       
+       useNames = parse_menu == '1' or file_name == "wiki-Vote.txt"
+       printPageRankValues(output, useNames, names)
+       end = time.time()
+       print('Transfer/Print Time: ' + str(end-start) + 'seconds')
+       
     # Sets up page rank structures
     '''
     pagerank.set_up(nodes, out_degrees, in_degrees)

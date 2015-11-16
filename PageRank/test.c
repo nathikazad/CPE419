@@ -41,12 +41,12 @@ int main (int argc, char **argv) {
 
    int* restrict indegree_count=allocateMemory(nodes);
    int* restrict outdegree_count=allocateMemory(nodes);
-   int* restrict running_edge_indices=allocateMemory(nodes + 1);
+   int* restrict running_edge_indices=allocateMemory(nodes);
    int* edges_1D = allocateMemory(edges);//node1:node2|node2->node1
 
    gettimeofday(&start, NULL);
 
-   fprintf(stderr, "%d\n", setvbuf(stdin, NULL, _IOFBF, edges));
+   setvbuf(stdin, NULL, _IOFBF, edges);
 
    //reads in edges
    for (i = 0; i < edges; i++) {
@@ -55,10 +55,6 @@ int main (int argc, char **argv) {
    }
 
    #pragma offload_transfer target(mic:0) in(edges_1D[0:edges]) signal(edges_1D)
-
-   gettimeofday(&stop, NULL);
-   fprintf(stderr, "took %lf seconds\n", (stop.tv_sec - start.tv_sec) +
-      ((stop.tv_usec - start.tv_usec) / 1000000.0));
 
    //reads in in-degrees, out-degrees, and computes running idx
    for (i = 0; i < nodes; i++) {
@@ -70,7 +66,7 @@ int main (int argc, char **argv) {
    }
 
    gettimeofday(&stop, NULL);
-   fprintf(stderr, "took %lf seconds\n", (stop.tv_sec - start.tv_sec) +
+   fprintf(stderr, "Read took %lf seconds\n", (stop.tv_sec - start.tv_sec) +
       ((stop.tv_usec - start.tv_usec) / 1000000.0));
 
    double* restrict pagerank_new;
@@ -91,6 +87,8 @@ int main (int argc, char **argv) {
       pagerank_old[i] = 1 / (double)nodes;
 
    memset(pagerank_new, 0, nodes * sizeof(double));
+
+   gettimeofday(&start, NULL);
 
 #pragma offload target(mic:0) wait(edges_1D) in(i, j, k) in(indegree_count:length(nodes)) \
    in(outdegree_count:length(nodes)) in(running_edge_indices:length(nodes)) \
@@ -115,7 +113,7 @@ int main (int argc, char **argv) {
    }
    }
    gettimeofday(&stop, NULL);
-   fprintf(stderr, "took %lf seconds\n", (stop.tv_sec - start.tv_sec) +
+   fprintf(stderr, "Compute took %lf seconds\n", (stop.tv_sec - start.tv_sec) +
       ((stop.tv_usec - start.tv_usec) / 1000000.0));
 
    for (i = 0; i < nodes; i++)
