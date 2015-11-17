@@ -26,5 +26,5 @@ prof: cuda_prof.cu
 	nvcc $(NVFLAGS) -o cuda_prof cuda_prof.cu
 
 clean: 
-	rm -f *.o pr_phi pr_test pr_cuda
+	rm -f *.o pr_phi pr_cuda
 

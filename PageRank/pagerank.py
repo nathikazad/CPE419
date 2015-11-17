@@ -18,7 +18,7 @@ import subprocess
 from subprocess import Popen, PIPE, STDOUT
 import urlparse
 
-# dictionary that holds the numbers of iterations, nodes, and edges for each input file
+# dictionary that holds the number of iterations, nodes, and edges for each input file
 # these numbers were either taken from the previous implementation or calculated
 def specs():
 

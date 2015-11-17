@@ -1,7 +1,4 @@
-took 0.414513 seconds
-took 0.514845 seconds
 ==21658== NVPROF is profiling process 21658, command: ./pr_cuda 410236 3356824 85
-took 1.282232 seconds
 ==21658== Profiling application: ./pr_cuda 410236 3356824 85
 ==21658== Profiling result:
 Time(%)      Time     Calls       Avg       Min       Max  Name
@@ -22,13 +19,4 @@ Time(%)      Time     Calls       Avg       Min       Max  Name
   0.00%  31.343us         1  31.343us  31.343us  31.343us  cuDeviceGetName
   0.00%  2.2440us         2  1.1220us     352ns  1.8920us  cuDeviceGetCount
   0.00%     574ns         2     287ns     179ns     395ns  cuDeviceGet
-
-
-Callees	Effective Time by Utilization	Spin Time	Overhead Time	Effective Time by Utilization	Spin Time	Overhead Time
-main	45.8%	54.2%	0.0%	0.010s	0s	0s
-  __offload_offload1	24.7%	54.2%	0.0%	0s	0s	0s
-  __isoc99_scanf	13.9%	0.0%	0.0%	0.540s	0s	0s
-  printf	6.2%	0.0%	0.0%	0.240s	0s	0s
-  __offload_target_acquire	0.5%	0.0%	0.0%	0s	0s	0s
-  __intel_avx_rep_memset	0.3%	0.0%	0.0%	0.010s	0s	0s
 

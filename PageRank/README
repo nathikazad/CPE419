@@ -1,0 +1,24 @@
+How to Build:
+
+Typing “make” will build both programs. 
+Typing “make clean” will remove all object files and executables.
+
+How to Run:
+
+python pagerank.py file_name version [-w]
+
+file_name: name of input file (file does not need to be in the current working directory)
+
+version: three possible values
+phi -> runs only Xeon Phi version
+cuda -> runs only Cuda version
+both -> runs both versions sequentially (Xeon Phi first, Cuda second)
+
+-w : Flag for the NCAA-Football dataset. This flag is used to determine which team won and therefore, 
+what team the arrow between the two teams points to. MAKE SURE TO PUT -w AS THE LAST COMMAND-LINE ARGUMENT IF NEEDED.
+
+Program Notes:
+
+We were able to successfully run the Live Journal dataset and get a significant speedup with both parallel 
+implementations. However, the results in the overall performance summary above and in the detailed results 
+below were gathered using different values of ‘d’ and ‘vector difference’ than those required to be considered for extra credit.
