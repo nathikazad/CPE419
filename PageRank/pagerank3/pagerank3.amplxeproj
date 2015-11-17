@@ -11,15 +11,14 @@
   <CPUFrequency type="s64_t">2300000000</CPUFrequency>
  </rdmgr>
  <All_Configurations-All_Platforms>
-  <analysis_type_settings>
-   <selected_analysis_type_path type="string">/opt/intel/vtune_amplifier_xe_2016.1.0.424694/config/analysis_type/basic_hotspots.cfg</selected_analysis_type_path>
-  </analysis_type_settings>
   <target_settings>
    <selected_workload>
+    <mic-offload type="string">launch</mic-offload>
     <localhost type="string">launch</localhost>
    </selected_workload>
    <result_dir>
-    <localhost type="string">//home/nsalam/intel/amplxe/projects/pagerank3</localhost>
+    <mic-offload type="string">//home/nsalam/Documents/CPE419/PageRank/pagerank3</mic-offload>
+    <localhost type="string">//home/nsalam/Documents/CPE419/PageRank/pagerank3</localhost>
    </result_dir>
    <workloads>
     <localhost>
@@ -28,7 +27,7 @@
        <targetName type="string">attach</targetName>
        <use_app_dir_as_work_dir type="bool">false</use_app_dir_as_work_dir>
        <attach.pid type="null"></attach.pid>
-       <result_directory.path type="string">//home/nsalam/intel/amplxe/projects/pagerank3/r@@@{at}</result_directory.path>
+       <result_directory.path type="string">//home/nsalam/Documents/CPE419/PageRank/pagerank3/r@@@{at}</result_directory.path>
        <search_directories type="bag"/>
        <context>
         <contextValue>
@@ -105,9 +104,9 @@
        <launch.userapppath type="string">/home/nsalam/Documents/CPE419/PageRank/pr_phi</launch.userapppath>
        <launch_app.app_to_launch type="string">/home/nsalam/Documents/CPE419/PageRank/pr_phi</launch_app.app_to_launch>
        <launch_app.app_parameters type="string">410236 3356824 85 &lt; amazon_out &gt; amazon_prof_phi</launch_app.app_parameters>
-       <launch_app.working_folder type="string">/home/nsalam/Documents/CPE419/PageRank</launch_app.working_folder>
        <launch_app.inherit_sys_environment type="bool">true</launch_app.inherit_sys_environment>
-       <result_directory.path type="string">//home/nsalam/intel/amplxe/projects/pagerank3/r@@@{at}</result_directory.path>
+       <launch_app.working_folder type="string">/home/nsalam/Documents/CPE419/PageRank</launch_app.working_folder>
+       <result_directory.path type="string">//home/nsalam/Documents/CPE419/PageRank/pagerank3/r@@@{at}</result_directory.path>
        <search_directories type="bag"/>
        <context>
         <contextValue>
@@ -185,7 +184,7 @@
       <workload>
        <targetName type="string">system</targetName>
        <use_app_dir_as_work_dir type="bool">false</use_app_dir_as_work_dir>
-       <result_directory.path type="string">//home/nsalam/intel/amplxe/projects/pagerank3/r@@@{at}</result_directory.path>
+       <result_directory.path type="string">//home/nsalam/Documents/CPE419/PageRank/pagerank3/r@@@{at}</result_directory.path>
        <search_directories type="bag"/>
        <context>
         <contextValue>
@@ -396,11 +395,164 @@
       </workload>
      </system>
     </mic>
+    <mic-offload>
+     <launch type="pointer" type_id="dasID_cctrl2::ApplicationWorkload" ptr_type="dasID_cctrl2::IWorkload">
+      <workload>
+       <targetName type="string">launch</targetName>
+       <use_app_dir_as_work_dir type="bool">true</use_app_dir_as_work_dir>
+       <launch_app.inherit_sys_environment type="bool">true</launch_app.inherit_sys_environment>
+       <launch.userapppath type="string">/home/nsalam/Documents/CPE419/PageRank/pr_phi</launch.userapppath>
+       <launch_app.app_to_launch type="string">/home/nsalam/Documents/CPE419/PageRank/pr_phi</launch_app.app_to_launch>
+       <launch_app.working_folder type="string"></launch_app.working_folder>
+       <result_directory.path type="string">//home/nsalam/Documents/CPE419/PageRank/pagerank3/r@@@{at}</result_directory.path>
+       <search_directories type="bag"/>
+       <context>
+        <contextValue>
+         <id type="string">allowMultipleRuns</id>
+         <value type="bool">false</value>
+        </contextValue>
+        <contextValue>
+         <id type="string">analyzeKvmGuest</id>
+         <value type="bool">false</value>
+        </contextValue>
+        <contextValue>
+         <id type="string">analyzeSystemWide</id>
+         <value type="bool">false</value>
+        </contextValue>
+        <contextValue>
+         <id type="string">cpuMask</id>
+         <value type="string"></value>
+        </contextValue>
+        <contextValue>
+         <id type="string">customCollector</id>
+         <value type="string"></value>
+        </contextValue>
+        <contextValue>
+         <id type="string">dataLimit</id>
+         <value type="s32_t">500</value>
+        </contextValue>
+        <contextValue>
+         <id type="string">followChild</id>
+         <value type="bool">true</value>
+        </contextValue>
+        <contextValue>
+         <id type="string">followChildStrategy</id>
+         <value type="string"></value>
+        </contextValue>
+        <contextValue>
+         <id type="string">goodFastFrameThreshold</id>
+         <value type="double">100</value>
+        </contextValue>
+        <contextValue>
+         <id type="string">kvmGuestKallsyms</id>
+         <value type="string"></value>
+        </contextValue>
+        <contextValue>
+         <id type="string">kvmGuestModules</id>
+         <value type="string"></value>
+        </contextValue>
+        <contextValue>
+         <id type="string">kvmProfileGuest</id>
+         <value type="null"></value>
+        </contextValue>
+        <contextValue>
+         <id type="string">mrteMode</id>
+         <value type="string">auto</value>
+        </contextValue>
+        <contextValue>
+         <id type="string">slowGoodFrameThreshold</id>
+         <value type="double">40</value>
+        </contextValue>
+        <contextValue>
+         <id type="string">targetDurationType</id>
+         <value type="string">short</value>
+        </contextValue>
+        <contextValue>
+         <id type="string">targetType</id>
+         <value type="string">launch</value>
+        </contextValue>
+        <contextValue>
+         <id type="string">traceMpi</id>
+         <value type="bool">false</value>
+        </contextValue>
+       </context>
+      </workload>
+     </launch>
+     <system type="pointer" type_id="dasID_cctrl2::SystemWideWorkload" ptr_type="dasID_cctrl2::IWorkload">
+      <workload>
+       <targetName type="string">system</targetName>
+       <use_app_dir_as_work_dir type="bool">false</use_app_dir_as_work_dir>
+       <result_directory.path type="string">//home/nsalam/Documents/CPE419/PageRank/pagerank3/r@@@{at}</result_directory.path>
+       <search_directories type="bag"/>
+       <context>
+        <contextValue>
+         <id type="string">allowMultipleRuns</id>
+         <value type="bool">false</value>
+        </contextValue>
+        <contextValue>
+         <id type="string">analyzeKvmGuest</id>
+         <value type="bool">false</value>
+        </contextValue>
+        <contextValue>
+         <id type="string">cpuMask</id>
+         <value type="string"></value>
+        </contextValue>
+        <contextValue>
+         <id type="string">customCollector</id>
+         <value type="string"></value>
+        </contextValue>
+        <contextValue>
+         <id type="string">dataLimit</id>
+         <value type="s32_t">500</value>
+        </contextValue>
+        <contextValue>
+         <id type="string">followChild</id>
+         <value type="bool">true</value>
+        </contextValue>
+        <contextValue>
+         <id type="string">goodFastFrameThreshold</id>
+         <value type="double">100</value>
+        </contextValue>
+        <contextValue>
+         <id type="string">kvmGuestKallsyms</id>
+         <value type="string"></value>
+        </contextValue>
+        <contextValue>
+         <id type="string">kvmGuestModules</id>
+         <value type="string"></value>
+        </contextValue>
+        <contextValue>
+         <id type="string">kvmProfileGuest</id>
+         <value type="null"></value>
+        </contextValue>
+        <contextValue>
+         <id type="string">mrteMode</id>
+         <value type="string">native</value>
+        </contextValue>
+        <contextValue>
+         <id type="string">slowGoodFrameThreshold</id>
+         <value type="double">40</value>
+        </contextValue>
+        <contextValue>
+         <id type="string">targetDurationType</id>
+         <value type="string">short</value>
+        </contextValue>
+        <contextValue>
+         <id type="string">targetType</id>
+         <value type="string">system</value>
+        </contextValue>
+       </context>
+      </workload>
+     </system>
+    </mic-offload>
    </workloads>
    <result_pattern>
     <localhost type="string">r@@@{at}</localhost>
    </result_pattern>
   </target_settings>
+  <analysis_type_settings>
+   <selected_analysis_type_path type="string">/opt/intel/vtune_amplifier_xe_2016.1.0.424694/config/analysis_type/basic_hotspots.cfg</selected_analysis_type_path>
+  </analysis_type_settings>
  </All_Configurations-All_Platforms>
  <engine>
   <knobs>
